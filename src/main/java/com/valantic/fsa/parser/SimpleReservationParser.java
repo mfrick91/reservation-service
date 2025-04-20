@@ -22,47 +22,61 @@ public class SimpleReservationParser implements ReservationParser {
     		.appendPattern("H[:][mm]").parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0).toFormatter();
 
     public ReservationData parse(String text) {
-        String name = this.extractName(text);
+    	text = text.trim();
+    	String searchText = text.toLowerCase(Locale.GERMAN);
+    	
+        String name = this.extractName(text, searchText);
         
-        LocalDate date = this.extractDate(text);
+        LocalDate date = this.extractDate(text, searchText);
         
-        LocalTime time = this.extractTime(text);
+        LocalTime time = this.extractTime(searchText);
 
-        int peopleCount = this.extractPeopleCount(text);
+        int peopleCount = this.extractPeopleCount(searchText);
         
         return new DefaultReservationData(name, date, time, peopleCount);
     }
 
-    private String extractName(String text) {
-        Pattern namePattern = Pattern.compile("(Gruß|Dank|Grüßen|Mit freundlichen Grüßen).*?([A-ZÄÖÜ][a-zäöüß]+\\s[A-ZÄÖÜ][a-zäöüß]+)");
-        Matcher matcher = namePattern.matcher(text);
+    private String extractName(String orginal, String searchText) {
+    	String[] closings = new String[] { "gruß", "gruss", "grüßen", "grüssen", "grueßen", "gruessen", "dank", "danke" };
+    	
+        Pattern namePattern = Pattern.compile("(" + String.join("|", closings) + ").*?([a-zäüöß]+\\s[a-zäüöß]+)");
+        Matcher matcher = namePattern.matcher(searchText);
         if (matcher.find()) {
-            return matcher.group(2);
+        	return orginal.substring(matcher.start(2), matcher.end(2));
         }
         return "Unbekannt";
     }
 
-    private LocalDate extractDate(String text) {
-        Pattern datePattern = Pattern.compile("(\\d{1,2}[.]\\d{1,2})|(\\d{1,2}[.]?\\s?[April]+)");
-        Matcher matcher = datePattern.matcher(text);
+    private LocalDate extractDate(String orginal, String searchText) {
+    	String[] months = new String[] { "januar", "februar", "märz", "maerz", "april", "mai", 
+    			"juni", "juli", "august", "september", "oktober", "november", "dezember" };
+    	
+    	// TODO: what about stuff like "morgen", "übermorgen" "nächste Woche" "übernächste Woche" "in x tagen", "kommenden Dienstag"
+    	
+        Pattern datePattern = Pattern.compile("(\\d{1,2}[.]\\d{1,2})|(\\d{1,2}[.]?\\s?(" + String.join("|", months) + ")+)");
+        Matcher matcher = datePattern.matcher(searchText);
         if (matcher.find()) {
-            String rawDate = matcher.group();
+        	String rawDate = orginal.substring(matcher.start(), matcher.end());
             return LocalDate.parse(rawDate, DATE_FORMAT);
         }
         return null;
     }
 
-    private LocalTime extractTime(String text) {
-        Pattern timePattern = Pattern.compile("(\\d{1,2}[:\\.]\\d{2})|(\\d{1,2}\\s*Uhr(\\s*(abends|morgens))?)");
-        Matcher matcher = timePattern.matcher(text);
+    private LocalTime extractTime(String searchText) {
+    	String morning = "morgens";
+    	String evening = "abends";
+    	
+        Pattern timePattern = Pattern.compile("(\\d{1,2}[:\\.]\\d{2})|(\\d{1,2}\\s*uhr(\\s*(" + morning + "|" + evening + "))?)");
+        Matcher matcher = timePattern.matcher(searchText);
         if (matcher.find()) {
-            String rawTime = matcher.group().replace(" Uhr", "").replace(".", ":").trim();
+            String rawTime = matcher.group();
 
-            boolean isAbends = rawTime.toLowerCase().contains("abends");
-            rawTime = rawTime.replace("abends", "").replace("morgens", "").trim();
+            boolean isEvening = rawTime.contains(evening);
+            rawTime = rawTime.replace(morning, "").replace(evening, "").trim();
+            rawTime = rawTime.replace(" uhr", "").replace(".", ":").trim();
 
             LocalTime parsed = LocalTime.parse(rawTime, TIME_FORMAT);
-            if (isAbends && parsed.getHour() < 12) {
+            if (isEvening && parsed.getHour() < 12) {
                 return parsed.plusHours(12);
             }
             return parsed;
@@ -70,27 +84,23 @@ public class SimpleReservationParser implements ReservationParser {
         return null;
     }
 
-    private int extractPeopleCount(String text) {
-        Pattern numberPattern = Pattern.compile("(\\d+)\\s*(Personen|Leuten|Mann|Gäste)");
-        Matcher matcher = numberPattern.matcher(text);
+    private int extractPeopleCount(String searchText) {
+    	String[] peoples = new String[] { "personen", "leuten", "mann", "frau", "gäste", "gaeste", "gästen", "gaesten" };
+    	
+    	// TODO: what about "zwischen x und y", "mindestens", "nicht mehr als", "bis zu"
+    	
+        Pattern numberPattern = Pattern.compile("(\\d+)\\s*(" + String.join("|", peoples) + ")");
+        Matcher matcher = numberPattern.matcher(searchText);
         if (matcher.find()) {
             return Integer.parseInt(matcher.group(1));
         }
 
-        return this.extractPeopleFromWords(text.toLowerCase());
+        numberPattern = Pattern.compile("([a-zäüöß]+)\\s*(" + String.join("|", peoples) + ")");
+        matcher = numberPattern.matcher(searchText);
+        if (matcher.find()) {
+            return ParserUtils.parseToInteger(matcher.group(1));
+        }
+        return 0;
     }
 
-    private int extractPeopleFromWords(String text) {
-        if (text.contains("eins")) return 1;
-        if (text.contains("zwei")) return 2;
-        if (text.contains("drei")) return 3;
-        if (text.contains("vier")) return 4;
-        if (text.contains("fünf")) return 5;
-        if (text.contains("sechs")) return 6;
-        if (text.contains("sieben")) return 7;
-        if (text.contains("acht")) return 8;
-        if (text.contains("neun")) return 9;
-        if (text.contains("zehn")) return 10;
-        return -1;
-    }
 }

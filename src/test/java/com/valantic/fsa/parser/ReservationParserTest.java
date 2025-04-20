@@ -45,5 +45,16 @@ class ReservationParserTest {
         assertEquals(LocalTime.of(21, 0), data.getTime());
         assertEquals(8, data.getPeopleCount());
     }
+    
+    @Test
+    void testExample3UpperCase() {
+        String text = "Guten Tag, einen Tisch für 8 Mann am 1.5. 9 Uhr abends, Gruß Franz Schulze".toUpperCase();
+        ReservationData data = parser.parse(text);
 
+        assertEquals("Franz Schulze".toUpperCase(), data.getName());
+        assertEquals(LocalDate.of(LocalDate.now().getYear(), 5, 1), data.getDate());
+        assertEquals(LocalTime.of(21, 0), data.getTime());
+        assertEquals(8, data.getPeopleCount());
+    }
+    
 }
