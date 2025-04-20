@@ -61,10 +61,11 @@ public class ParserUtils {
 		
 		numberWord = numberWord.trim();
 		numberWord = numberWord.toLowerCase();
-
-		// handle trivial case
-		if (numberWord.equals("null")) {
-			return 0;
+		
+		// handle a actual number
+		try {
+			return Integer.parseInt(numberWord);
+		} catch (Exception e) {
 		}
 		
 		// determine sign
@@ -72,6 +73,11 @@ public class ParserUtils {
 		if (numberWord.startsWith("minus")) {
 			numberWord = numberWord.substring(5, numberWord.length());
 			sign = -1;
+		}
+
+		// handle trivial case
+		if (numberWord.equals("null")) {
+			return sign * 0;
 		}
 		
 		// calculate sum
