@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,59 @@ class ReservationParserTest {
         assertEquals(LocalTime.of(21, 0), data.getTime());
         assertEquals(8, data.getPeopleCount());
     }
+    
+    @Test
+    void testRelativeDates() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        String text = "Hallo, bitte für zwei Personen einen Tisch für morgen um 20:00 Uhr, Vielen Dank Klaus Müller";
+        ReservationRequest request = new DefaultReservationRequest(text, now);
+        ReservationData data = parser.parse(request);
+        assertEquals(now.toLocalDate().plusDays(1), data.getDate());
+        
+        text = "Sehr geehrte Damen Herren, wir würden gern übermorgen um 9:45 Uhr mit sechs Leuten zum Brunch kommen, Mit freundlichen Grüßen Maria Meier";
+        request = new DefaultReservationRequest(text, now);
+        data = parser.parse(request);
+        assertEquals(now.toLocalDate().plusDays(2), data.getDate());
+        
+        text = "Guten Tag, einen Tisch für 8 Mann für nächste Woche 9 Uhr abends, Gruß Franz Schulze";
+        request = new DefaultReservationRequest(text, now);
+        data = parser.parse(request);
+        assertEquals(now.toLocalDate().plusWeeks(1), data.getDate());
+    }
+    
+    @Test
+    void testWeekdays() {
+        LocalDateTime now = LocalDateTime.now();
+        int currentDayIndex = now.getDayOfWeek().getValue();
+
+        String[] qualifiers = new String[] { "", "kommenden ", "nächsten ", "übernächsten " };
+        String[] weekdays = new String[] { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Fr", "Sa", "So" };
+		for (String qualifier : qualifiers) {
+			int dayIndex = 1;
+			for (String weekday : weekdays) {
+				String text = String.format(
+						"Hallo, bitte für zwei Personen einen Tisch am %s%s um 20:00 Uhr, Vielen Dank Klaus Müller",
+						qualifier, weekday);
+				
+				ReservationRequest request = new DefaultReservationRequest(text);
+				ReservationData data = parser.parse(request);
+
+				// go to next week
+				int daysToAdd = (dayIndex - currentDayIndex + 7) % 7;
+				if (daysToAdd == 0) {
+					daysToAdd = 7;
+				}
+				// go to week after next
+				if (qualifier.contains("übernächsten")) {
+					daysToAdd += 7;
+				}
+				
+				assertEquals(now.toLocalDate().plusDays(daysToAdd), data.getDate());
+				dayIndex++;
+			}
+		}
+	}
     
     @Test
     void testBetweenPeopleCount() {
