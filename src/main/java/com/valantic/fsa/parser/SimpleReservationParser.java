@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import com.valantic.fsa.model.DefaultReservationData;
 import com.valantic.fsa.model.ReservationData;
+import com.valantic.fsa.model.ReservationRequest;
 
 public class SimpleReservationParser implements ReservationParser {
 	
@@ -21,7 +22,9 @@ public class SimpleReservationParser implements ReservationParser {
     private static final DateTimeFormatter TIME_FORMAT = new DateTimeFormatterBuilder()
     		.appendPattern("H[:][mm]").parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0).toFormatter();
 
-    public ReservationData parse(String text) {
+    @Override
+    public ReservationData parse(ReservationRequest request) {
+        String text = request.getText();
     	text = text.trim();
     	String searchText = text.toLowerCase(Locale.GERMAN);
     	
@@ -85,22 +88,68 @@ public class SimpleReservationParser implements ReservationParser {
     }
 
     private int extractPeopleCount(String searchText) {
-    	String[] peoples = new String[] { "personen", "leuten", "mann", "frau", "gäste", "gaeste", "gästen", "gaesten" };
-    	
-    	// TODO: what about "zwischen x und y", "mindestens", "nicht mehr als", "bis zu"
-    	
-        Pattern numberPattern = Pattern.compile("(\\d+)\\s*(" + String.join("|", peoples) + ")");
+		String[] peopleIdentifiers = new String[] { 
+				"person", "personen", "leute", "leuten", "freund", "freunde", "freunden", "kind", "kinder",
+				"herr", "herren", "mann", "männer", "maenner", "junge", "jungen",
+				"dame", "damen", "frau", "frauen", 
+				"gäste", "gaeste", "gästen", "gaesten" };
+		String peoplePatternStr = "\\s*(" + String.join("|", peopleIdentifiers) + ")";
+
+		int peopleCount = -1;
+		
+        // patterns for simple numbers
+        Pattern numberPattern = Pattern.compile("(\\d+|[a-zäüöß]+)" + peoplePatternStr);
         Matcher matcher = numberPattern.matcher(searchText);
-        if (matcher.find()) {
-            return Integer.parseInt(matcher.group(1));
+        while(matcher.find()) {
+        	try {
+            	peopleCount = ParserUtils.parseToInteger(matcher.group(1));
+			} catch (Exception e) {
+			}
+        }
+		
+        // pattern for "zwischen x und y"
+        Pattern betweenPattern = Pattern.compile("zwischen\\s+(\\d+|[a-zäüöß]+)\\s+und\\s+(\\d+|[a-zäüöß]+)" + peoplePatternStr);
+        matcher = betweenPattern.matcher(searchText);
+        while(matcher.find()) {
+        	try {
+	            int min = ParserUtils.parseToInteger(matcher.group(1));
+	            int max = ParserUtils.parseToInteger(matcher.group(2));
+	            peopleCount = Math.max(peopleCount, Math.max(min, max)); // return the larger value to ensure enough space
+			} catch (Exception e) {
+			}
         }
 
-        numberPattern = Pattern.compile("([a-zäüöß]+)\\s*(" + String.join("|", peoples) + ")");
-        matcher = numberPattern.matcher(searchText);
-        if (matcher.find()) {
-            return ParserUtils.parseToInteger(matcher.group(1));
+        // pattern for "mindestens x"
+        Pattern atLeastPattern = Pattern.compile("mindestens\\s+(\\d+|[a-zäüöß]+)" + peoplePatternStr);
+        matcher = atLeastPattern.matcher(searchText);
+        while(matcher.find()) {
+			try {
+				peopleCount = Math.max(peopleCount, ParserUtils.parseToInteger(matcher.group(1)));
+			} catch (Exception e) {
+			}
         }
-        return 0;
+
+        // pattern for "bis zu x"
+        Pattern upToPattern = Pattern.compile("bis\\s+zu\\s+(\\d+|[a-zäüöß]+)" + peoplePatternStr);
+        matcher = upToPattern.matcher(searchText);
+        while(matcher.find()) {
+			try {
+				peopleCount = Math.max(peopleCount, ParserUtils.parseToInteger(matcher.group(1)));
+			} catch (Exception e) {
+			}
+        }
+
+        // pattern for "nicht mehr als x"
+        Pattern notMoreThanPattern = Pattern.compile("nicht\\s+mehr\\s+als\\s+(\\d+|[a-zäüöß]+)" + peoplePatternStr);
+        matcher = notMoreThanPattern.matcher(searchText);
+        while(matcher.find()) {
+			try {
+				peopleCount = Math.max(peopleCount, ParserUtils.parseToInteger(matcher.group(1)));
+			} catch (Exception e) {
+			}
+        }
+
+        return peopleCount;
     }
 
 }
