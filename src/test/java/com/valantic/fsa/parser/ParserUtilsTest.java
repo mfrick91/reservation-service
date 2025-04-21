@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class ParserUtilsTest {
 
     @Test
-    void testParseToInteger_SimpleNumbers() {
+    void testParseSimpleNumbers() {
         assertEquals(1, ParserUtils.parseToInteger("eins"));
         assertEquals(2, ParserUtils.parseToInteger("zwei"));
         assertEquals(3, ParserUtils.parseToInteger("drei"));
@@ -26,7 +26,7 @@ class ParserUtilsTest {
     }
 
     @Test
-    void testParseToInteger_Tens() {
+    void testParseTens() {
         assertEquals(20, ParserUtils.parseToInteger("zwanzig"));
         assertEquals(30, ParserUtils.parseToInteger("dreißig"));
         assertEquals(30, ParserUtils.parseToInteger("dreissig"));
@@ -40,7 +40,7 @@ class ParserUtilsTest {
     }
 
     @Test
-    void testParseToInteger_ComplexNumbers() {
+    void testParseComplexNumbers() {
         assertEquals(21, ParserUtils.parseToInteger("einundzwanzig"));
         assertEquals(32, ParserUtils.parseToInteger("zweiunddreißig"));
         assertEquals(32, ParserUtils.parseToInteger("zweiunddreißig"));
@@ -54,7 +54,7 @@ class ParserUtilsTest {
     }
 
     @Test
-    void testParseToInteger_Hundreds() {
+    void testParseHundreds() {
         assertEquals(100, ParserUtils.parseToInteger("hundert"));
         assertEquals(200, ParserUtils.parseToInteger("zweihundert"));
         assertEquals(300, ParserUtils.parseToInteger("dreihundert"));
@@ -67,7 +67,7 @@ class ParserUtilsTest {
     }
 
     @Test
-    void testParseToInteger_Thousands() {
+    void testParseThousands() {
         assertEquals(1000, ParserUtils.parseToInteger("tausend"));
         assertEquals(2000, ParserUtils.parseToInteger("zweitausend"));
         assertEquals(3000, ParserUtils.parseToInteger("dreitausend"));
@@ -80,21 +80,31 @@ class ParserUtilsTest {
     }
 
     @Test
-    void testParseToInteger_ComplexNumbersWithHundredsAndThousands() {
-        assertEquals(400066, ParserUtils.parseToInteger("vierhunderttausendsechsundsechzig"));
-        assertEquals(123456, ParserUtils.parseToInteger("hundertdreiundzwanzigtausendvierhundertsechsundfünfzig"));
+    void testParseComplexNumbersWithHundredsAndThousands() {
         assertEquals(1001, ParserUtils.parseToInteger("tausendeins"));
         assertEquals(1100, ParserUtils.parseToInteger("tausendeinhundert"));
         assertEquals(1111, ParserUtils.parseToInteger("tausendeinhundertelf"));
+        assertEquals(400066, ParserUtils.parseToInteger("vierhunderttausendsechsundsechzig"));
+        assertEquals(123456, ParserUtils.parseToInteger("hundertdreiundzwanzigtausendvierhundertsechsundfünfzig"));
     }
 
     @Test
-    void testParseToInteger_Zero() {
+    void testParseZero() {
         assertEquals(0, ParserUtils.parseToInteger("null"));
     }
 
     @Test
-    void testParseToInteger_NegativeNumbers() {
+    void testParseActualNumbers() {
+        assertEquals(0, ParserUtils.parseToInteger("0"));
+        assertEquals(-1, ParserUtils.parseToInteger("-1"));
+        assertEquals(1100, ParserUtils.parseToInteger("1100"));
+        assertEquals(400066, ParserUtils.parseToInteger("400066"));
+        assertEquals(123456, ParserUtils.parseToInteger("123456"));
+    }
+
+    @Test
+    void testParseNegativeNumbers() {
+        assertEquals(-0, ParserUtils.parseToInteger("minusnull"));
         assertEquals(-1, ParserUtils.parseToInteger("minuseins"));
         assertEquals(-100, ParserUtils.parseToInteger("minushundert"));
         assertEquals(-1000, ParserUtils.parseToInteger("minustausend"));
@@ -102,7 +112,7 @@ class ParserUtilsTest {
     }
 
     @Test
-    void testParseToInteger_InvalidInput() {
+    void testParseInvalidInputs() {
         assertThrows(ParserUtils.ParserException.class, () -> ParserUtils.parseToInteger(null));
         assertThrows(ParserUtils.ParserException.class, () -> ParserUtils.parseToInteger("invalid"));
         assertThrows(ParserUtils.ParserException.class, () -> ParserUtils.parseToInteger(""));

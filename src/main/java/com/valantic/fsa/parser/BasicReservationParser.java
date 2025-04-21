@@ -17,7 +17,7 @@ import com.valantic.fsa.model.DefaultReservationData;
 import com.valantic.fsa.model.ReservationData;
 import com.valantic.fsa.model.ReservationRequest;
 
-public class SimpleReservationParser implements ReservationParser {
+public class BasicReservationParser implements ReservationParser {
 	
 	private static final String[] CLOSING_IDENTIFIERS = new String[] { 
 			"gruß", "gruss", "grüßen", "grüssen", "grueßen", "gruessen", "dank", "danke" };
@@ -81,6 +81,8 @@ public class SimpleReservationParser implements ReservationParser {
             String rawDate = orginal.substring(matcher.start(), matcher.end());
             return LocalDate.parse(rawDate, DATE_FORMAT);
         }
+        
+        // TODO: handle stuff like "in 3 wochen"
         
         // match relative dates
         LocalDateTime timestamp = request.getTimestamp();

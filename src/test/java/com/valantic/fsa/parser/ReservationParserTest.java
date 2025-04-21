@@ -14,7 +14,7 @@ import com.valantic.fsa.model.ReservationRequest;
 
 class ReservationParserTest {
 
-	private final ReservationParser parser = new SimpleReservationParser();
+	private final ReservationParser parser = new BasicReservationParser();
 	
 	@Test
 	void testExample1() {
