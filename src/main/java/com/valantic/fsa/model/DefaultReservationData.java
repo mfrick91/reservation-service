@@ -8,13 +8,9 @@ public class DefaultReservationData implements ReservationData {
 	private String name;
 	private LocalDate date;
 	private LocalTime time;
-	private int peopleCount;
+	private Integer peopleCount;
 	
-	public DefaultReservationData() {
-		
-	}
-
-	public DefaultReservationData(String name, LocalDate date, LocalTime time, int peopleCount) {
+	public DefaultReservationData(String name, LocalDate date, LocalTime time, Integer peopleCount) {
 		this.name = name;
 		this.date = date;
 		this.time = time;
@@ -37,7 +33,7 @@ public class DefaultReservationData implements ReservationData {
 	}
 
 	@Override
-	public int getPeopleCount() {
+	public Integer getPeopleCount() {
 		return peopleCount;
 	}
 	

@@ -11,6 +11,6 @@ public interface ReservationData {
 	
 	public LocalTime getTime();
 	
-	public int getPeopleCount();
+	public Integer getPeopleCount();
 
 }

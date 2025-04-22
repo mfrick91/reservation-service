@@ -19,10 +19,10 @@ import com.valantic.fsa.model.ReservationRequest;
 
 public class BasicReservationParser implements ReservationParser {
 	
-	private static final String[] CLOSING_IDENTIFIERS = new String[] { 
+	private static final String[] CLOSINGS = new String[] { 
 			"gruß", "gruss", "grüßen", "grüssen", "grueßen", "gruessen", "dank", "danke" };
     
-    private static final String[] WEEKDAY_IDENTIFIERS = new String[] { 
+    private static final String[] WEEKDAYS = new String[] { 
             "montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag",
             "mo", "di", "mi", "do", "fr", "sa", "so" };
     
@@ -59,18 +59,18 @@ public class BasicReservationParser implements ReservationParser {
         
         LocalTime time = this.extractTime(searchText);
 
-        int peopleCount = this.extractPeopleCount(searchText);
+        Integer peopleCount = this.extractPeopleCount(searchText);
         
         return new DefaultReservationData(name, date, time, peopleCount);
     }
 
     private String extractName(String orginal, String searchText) {
-        Pattern namePattern = Pattern.compile("(" + String.join("|", CLOSING_IDENTIFIERS) + ").*?([a-zäüöß]+\\s[a-zäüöß]+)");
+        Pattern namePattern = Pattern.compile("(" + String.join("|", CLOSINGS) + ").*?([a-zäüöß]+\\s[a-zäüöß]+)");
         Matcher matcher = namePattern.matcher(searchText);
         if (matcher.find()) {
         	return orginal.substring(matcher.start(2), matcher.end(2));
         }
-        return "Unbekannt";
+        return null;
     }
 
     private LocalDate extractDate(ReservationRequest request, String orginal, String searchText) {
@@ -127,8 +127,8 @@ public class BasicReservationParser implements ReservationParser {
         
 		// match weekdays
 		int dayIndex = 1;
-		for (String weekday : WEEKDAY_IDENTIFIERS) {
-			if (searchText.contains(weekday)) {
+		for (String weekday : WEEKDAYS) {
+			if (searchText.contains(" " + weekday + " ")) {
 				int currentDayIndex = today.getDayOfWeek().getValue();
 				int daysToAdd = (dayIndex - currentDayIndex + 7) % 7;
 				// go to next week
@@ -151,7 +151,7 @@ public class BasicReservationParser implements ReservationParser {
     	String morning = "morgens";
     	String evening = "abends";
     	
-        Pattern timePattern = Pattern.compile("(\\d{1,2}[:\\.]\\d{2})|(\\d{1,2}\\s*uhr(\\s*(" + morning + "|" + evening + "))?)");
+        Pattern timePattern = Pattern.compile("(\\d{1,2}:\\d{2})|(\\d{1,2}\\s*uhr(\\s*(" + morning + "|" + evening + "))?)");
         Matcher matcher = timePattern.matcher(searchText);
         if (matcher.find()) {
             String rawTime = matcher.group();
@@ -169,7 +169,7 @@ public class BasicReservationParser implements ReservationParser {
         return null;
     }
 
-    private int extractPeopleCount(String searchText) {
+    private Integer extractPeopleCount(String searchText) {
     	// remove special characters
     	searchText = searchText.replace("ä", "ae").replace("ü", "ue")
     			.replace("ö", "oe").replace("ß", "ss"); 
@@ -178,7 +178,7 @@ public class BasicReservationParser implements ReservationParser {
     	String peoplePatternStr = "\\s*(" + String.join("|", PEOPLE_IDENTIFIERS) + ")";
         Pattern numberPattern = Pattern.compile("(\\d+|[a-zäüöß]+)" + peoplePatternStr);
         Matcher matcher = numberPattern.matcher(searchText);
-		int peopleCount = -1;
+        Integer peopleCount = null;
         while(matcher.find()) {
         	try {
             	peopleCount = ParserUtils.parseToInteger(matcher.group(1));
@@ -191,9 +191,14 @@ public class BasicReservationParser implements ReservationParser {
         matcher = betweenPattern.matcher(searchText);
         while(matcher.find()) {
         	try {
-	            int min = ParserUtils.parseToInteger(matcher.group(1));
-	            int max = ParserUtils.parseToInteger(matcher.group(2));
-	            peopleCount = Math.max(peopleCount, Math.max(min, max)); // return the larger value to ensure enough space
+	            int number1 = ParserUtils.parseToInteger(matcher.group(1));
+	            int number2 = ParserUtils.parseToInteger(matcher.group(2));
+	            int maximum = Math.max(number1, number2); // return the larger value to ensure enough space
+				if (peopleCount == null) {
+					peopleCount = maximum;
+				} else {
+					peopleCount = Math.max(peopleCount, maximum);
+				}
 			} catch (Exception e) {
 			}
         }
@@ -203,7 +208,12 @@ public class BasicReservationParser implements ReservationParser {
         matcher = atLeastPattern.matcher(searchText);
         while(matcher.find()) {
 			try {
-				peopleCount = Math.max(peopleCount, ParserUtils.parseToInteger(matcher.group(1)));
+				int number = ParserUtils.parseToInteger(matcher.group(1));
+				if (peopleCount == null) {
+					peopleCount = number;
+				} else {
+					peopleCount = Math.max(peopleCount, number);
+				}
 			} catch (Exception e) {
 			}
         }
@@ -213,7 +223,12 @@ public class BasicReservationParser implements ReservationParser {
         matcher = upToPattern.matcher(searchText);
         while(matcher.find()) {
 			try {
-				peopleCount = Math.max(peopleCount, ParserUtils.parseToInteger(matcher.group(1)));
+				int number = ParserUtils.parseToInteger(matcher.group(1));
+				if (peopleCount == null) {
+					peopleCount = number;
+				} else {
+					peopleCount = Math.max(peopleCount, number);
+				}
 			} catch (Exception e) {
 			}
         }
@@ -223,7 +238,12 @@ public class BasicReservationParser implements ReservationParser {
         matcher = notMoreThanPattern.matcher(searchText);
         while(matcher.find()) {
 			try {
-				peopleCount = Math.max(peopleCount, ParserUtils.parseToInteger(matcher.group(1)));
+				int number = ParserUtils.parseToInteger(matcher.group(1));
+				if (peopleCount == null) {
+					peopleCount = number;
+				} else {
+					peopleCount = Math.max(peopleCount, number);
+				}
 			} catch (Exception e) {
 			}
         }
