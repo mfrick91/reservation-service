@@ -20,7 +20,7 @@ import com.valantic.fsa.model.ReservationRequest;
 public class BasicReservationParser implements ReservationParser {
 	
 	private static final String[] CLOSINGS = new String[] { 
-			"gruß", "gruss", "grüßen", "grüssen", "grueßen", "gruessen", "dank", "danke" };
+			 "grüßen", "grüssen", "grueßen", "gruessen", "grüße", "grueße", "grüsse", "gruesse", "gruß", "gruss", "dank", "danke" };
     
     private static final String[] WEEKDAYS = new String[] { 
             "montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag",

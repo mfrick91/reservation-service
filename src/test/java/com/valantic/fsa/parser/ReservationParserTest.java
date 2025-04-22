@@ -15,18 +15,6 @@ class ReservationParserTest {
 
 	private final ReservationParser parser = new BasicReservationParser();
 	
-	@Test
-	void testExample() {
-		assertParsed("Hallo, bitte für zwei Personen einen Tisch am 19.3. um 20:00 Uhr, Vielen Dank Klaus Müller",
-				"Klaus Müller", LocalDate.of(year(), 3, 19), LocalTime.of(20, 0), 2);
-		
-		assertParsed("Sehr geehrte Damen Herren, wir würden gern am 9. April 9:45 Uhr mit sechs Leuten zum Brunch kommen, Mit freundlichen Grüßen Maria Meier",
-				"Maria Meier", LocalDate.of(year(), 4, 9), LocalTime.of(9, 45), 6);
-		
-		assertParsed("Guten Tag, einen Tisch für 8 Mann am 1.5. 9 Uhr abends, Gruß Franz Schulze",
-				"Franz Schulze", LocalDate.of(year(), 5, 1), LocalTime.of(21, 0), 8);
-	}
-	
     @Test
     void testUpperCase() {
 		assertParsed("Hallo, bitte für zwei Personen einen Tisch am 19.3. um 20:00 Uhr, Vielen Dank Klaus Müller".toUpperCase(),
@@ -90,6 +78,35 @@ class ReservationParserTest {
 			}
 		}
 	}
+
+	@Test
+	void testInXDaysWeeksMonthsYears() {
+		LocalDateTime now = LocalDateTime.now();
+
+		assertParsed("Hallo, bitte für zwei Personen einen Tisch in fünf Tagen um 20:00 Uhr, Vielen Dank Klaus Müller",
+				"Klaus Müller", now.toLocalDate().plusDays(5), LocalTime.of(20, 0), 2);
+
+		assertParsed("Hallo, bitte für zwei Personen einen Tisch in zwei Wochen um 20:00 Uhr, Vielen Dank Klaus Müller",
+				"Klaus Müller", now.toLocalDate().plusWeeks(2), LocalTime.of(20, 0), 2);
+		
+		assertParsed("Hallo, bitte für zwei Personen einen Tisch in 28 Monaten um 20:00 Uhr, Vielen Dank Klaus Müller",
+				"Klaus Müller", now.toLocalDate().plusMonths(28), LocalTime.of(20, 0), 2);
+
+		assertParsed("Hallo, bitte für zwei Personen einen Tisch in 28 Jahren um 20:00 Uhr, Vielen Dank Klaus Müller",
+				"Klaus Müller", now.toLocalDate().plusYears(28), LocalTime.of(20, 0), 2);
+
+		assertParsed("Hallo, bitte für zwei Personen einen Tisch in 4 Tagen, drei Wochen, neun Monaten und 2 Jahren um 20:00 Uhr, Vielen Dank Klaus Müller",
+				"Klaus Müller", now.toLocalDate().plusDays(4).plusWeeks(3).plusMonths(9).plusYears(2), LocalTime.of(20, 0), 2);
+	}
+    
+    @Test
+    void testPeopleCount() {
+        assertParsed("Guten Tag, wir sind zu 4 und kommen am 1.5. 9 Uhr abends zum Essen, Gruß Franz Schulze",
+                "Franz Schulze", LocalDate.of(year(), 5, 1), LocalTime.of(21, 0), 4);
+        
+        assertParsed("Guten Tag, wir würden zu zwölft am 1.5. 9 Uhr abends kommen, Gruß Franz Schulze",
+                "Franz Schulze", LocalDate.of(year(), 5, 1), LocalTime.of(21, 0), 12);
+    }
     
     @Test
     void testAtLeastPeopleCount() {
