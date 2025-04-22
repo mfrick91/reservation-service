@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParserUtils {
 
 	private static final Map<String, Integer> SIMPLE_NUMBERS_MAP = new LinkedHashMap<>();
 	private static final Map<String, Integer> TENS_MAP = new LinkedHashMap<>();
 	private static final Map<String, Integer> SCALES_MAP = new LinkedHashMap<>();
-	
 	static  {
 		// initialize simple number mapping
 		SIMPLE_NUMBERS_MAP.put("einen", 1);
@@ -156,6 +157,81 @@ public class ParserUtils {
 				parseNumberRecursive(remaining, sum, currentValue + simple.getValue(), results);
 			}
 		}
+	}
+
+	private static final Map<String, String> MONTH_MAP = new LinkedHashMap<>();
+	static {
+		// initialize month mapping
+		MONTH_MAP.put("januar", "1.");
+		MONTH_MAP.put("jan", "1.");
+		MONTH_MAP.put("februar", "2.");
+		MONTH_MAP.put("feb", "2.");
+		MONTH_MAP.put("maerz", "3.");
+		MONTH_MAP.put("maer", "3.");
+		MONTH_MAP.put("april", "4.");
+		MONTH_MAP.put("apr", "4.");
+		MONTH_MAP.put("mai", "5.");
+		MONTH_MAP.put("juni", "6.");
+		MONTH_MAP.put("jun", "6.");
+		MONTH_MAP.put("juli", "7.");
+		MONTH_MAP.put("jul", "7.");
+		MONTH_MAP.put("august", "8.");
+		MONTH_MAP.put("aug", "8.");
+		MONTH_MAP.put("september", "9.");
+		MONTH_MAP.put("sep", "9.");
+		MONTH_MAP.put("oktober", "10.");
+		MONTH_MAP.put("okt", "10.");
+		MONTH_MAP.put("november", "11.");
+		MONTH_MAP.put("nov", "11.");
+		MONTH_MAP.put("dezember", "12.");
+		MONTH_MAP.put("dez", "12.");
+	}
+	
+	public static String normalizeText(String text) {
+		if (text == null) {
+			return "";
+		}
+		
+		// convert to lower case
+		String normalizedText = text.trim().toLowerCase(Locale.GERMAN);
+
+    	// remove special characters
+		normalizedText = normalizedText
+				.replace("ä", "ae").replace("ü", "ue")
+    			.replace("ö", "oe").replace("ß", "ss"); 
+		
+		// replace month names with numbers
+		for (Map.Entry<String, String> entry : MONTH_MAP.entrySet()) {
+			Pattern pattern = Pattern.compile("(\\b" + entry.getKey() + "\\b)|(\\.\\s(" + entry.getKey() + "))");
+			Matcher matcher = pattern.matcher(normalizedText);
+			StringBuilder sb = new StringBuilder();
+			if (matcher.find()) {
+				if (matcher.group().startsWith(".")) {
+					matcher.appendReplacement(sb, "." + entry.getValue());
+				} else {
+					matcher.appendReplacement(sb, entry.getValue());
+				}
+			}
+			matcher.appendTail(sb);
+			normalizedText = sb.toString();
+		}
+		
+		// replace number words with numbers
+		Pattern wordPattern = Pattern.compile("\\b([a-z]+)\\b");
+		Matcher matcher = wordPattern.matcher(normalizedText);
+		StringBuilder sb = new StringBuilder();
+		while (matcher.find()) {
+			String word = matcher.group();
+			// try number parsing
+			try {
+				int number = parseToInteger(word);
+				matcher.appendReplacement(sb, String.valueOf(number));
+			} catch (ParserException e) {
+			}
+		}
+		matcher.appendTail(sb);
+		
+		return sb.toString();
 	}
 	
 	public static class ParserException extends RuntimeException {
