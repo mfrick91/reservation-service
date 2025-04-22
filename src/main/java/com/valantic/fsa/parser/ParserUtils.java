@@ -1,57 +1,71 @@
 package com.valantic.fsa.parser;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class ParserUtils {
 
-	private static Map<String, Integer> wordsToSimpleNumbers;
-	private static Map<String, Integer> wordsToTens;
-	private static Map<String, Integer> wordsToScales;
+	private static final Map<String, Integer> SIMPLE_NUMBERS_MAP = new LinkedHashMap<>();
+	private static final Map<String, Integer> TENS_MAP = new LinkedHashMap<>();
+	private static final Map<String, Integer> SCALES_MAP = new LinkedHashMap<>();
 	
 	static  {
-		// units
-		wordsToSimpleNumbers = new HashMap<>();
-		wordsToSimpleNumbers.put("eins", 1);
-		wordsToSimpleNumbers.put("ein", 1);
-		wordsToSimpleNumbers.put("eine", 1);
-		wordsToSimpleNumbers.put("einen", 1);
-		wordsToSimpleNumbers.put("zwei", 2);
-		wordsToSimpleNumbers.put("drei", 3);
-		wordsToSimpleNumbers.put("vier", 4);
-		wordsToSimpleNumbers.put("fünf", 5);
-		wordsToSimpleNumbers.put("fuenf", 5);
-		wordsToSimpleNumbers.put("sechs", 6);
-		wordsToSimpleNumbers.put("sieben", 7);
-		wordsToSimpleNumbers.put("acht", 8);
-		wordsToSimpleNumbers.put("neun", 9);
-		wordsToSimpleNumbers.put("zehn", 10);
-		wordsToSimpleNumbers.put("elf", 11);
-		wordsToSimpleNumbers.put("zwölf", 12);
-		wordsToSimpleNumbers.put("zwoelf", 12);
+		// initialize simple number mapping
+		SIMPLE_NUMBERS_MAP.put("einen", 1);
+		SIMPLE_NUMBERS_MAP.put("eins", 1);
+		SIMPLE_NUMBERS_MAP.put("eine", 1);
+		SIMPLE_NUMBERS_MAP.put("ein", 1);
+		SIMPLE_NUMBERS_MAP.put("alleine", 1);
+		SIMPLE_NUMBERS_MAP.put("allein", 1);
+		SIMPLE_NUMBERS_MAP.put("zweit", 2);
+		SIMPLE_NUMBERS_MAP.put("zwei", 2);
+		SIMPLE_NUMBERS_MAP.put("drei", 3);
+		SIMPLE_NUMBERS_MAP.put("dritt", 3);
+		SIMPLE_NUMBERS_MAP.put("viert", 4);
+		SIMPLE_NUMBERS_MAP.put("vier", 4);
+		SIMPLE_NUMBERS_MAP.put("fünft", 5);
+		SIMPLE_NUMBERS_MAP.put("fünf", 5);
+		SIMPLE_NUMBERS_MAP.put("fuenft", 5);
+		SIMPLE_NUMBERS_MAP.put("fuenf", 5);
+		SIMPLE_NUMBERS_MAP.put("sechst", 6);
+		SIMPLE_NUMBERS_MAP.put("sechs", 6);
+		SIMPLE_NUMBERS_MAP.put("sieben", 7);
+		SIMPLE_NUMBERS_MAP.put("siebt", 7);
+		SIMPLE_NUMBERS_MAP.put("acht", 8);
+		SIMPLE_NUMBERS_MAP.put("neunt", 9);
+		SIMPLE_NUMBERS_MAP.put("neun", 9);
+		SIMPLE_NUMBERS_MAP.put("zehnt", 10);
+		SIMPLE_NUMBERS_MAP.put("zehn", 10);
+		SIMPLE_NUMBERS_MAP.put("elft", 11);
+		SIMPLE_NUMBERS_MAP.put("elf", 11);
+		SIMPLE_NUMBERS_MAP.put("zwölft", 12);
+		SIMPLE_NUMBERS_MAP.put("zwölf", 12);
+		SIMPLE_NUMBERS_MAP.put("zwoelft", 12);
+		SIMPLE_NUMBERS_MAP.put("zwoelf", 12);
 		
-		// tens
-		wordsToTens = new HashMap<>();
-		wordsToTens.put("zwanzig", 20);
-		wordsToTens.put("dreißig", 30);
-		wordsToTens.put("dreissig", 30);
-		wordsToTens.put("vierzig", 40);
-		wordsToTens.put("fünfzig", 50);
-		wordsToTens.put("fuenfzig", 50);
-		wordsToTens.put("sechzig", 60);
-		wordsToTens.put("siebzig", 70);
-		wordsToTens.put("achtzig", 80);
-		wordsToTens.put("neunzig", 90);
+		// initialize tens mapping
+		TENS_MAP.put("zwanzig", 20);
+		TENS_MAP.put("dreißig", 30);
+		TENS_MAP.put("dreissig", 30);
+		TENS_MAP.put("vierzig", 40);
+		TENS_MAP.put("fünfzig", 50);
+		TENS_MAP.put("fuenfzig", 50);
+		TENS_MAP.put("sechzig", 60);
+		TENS_MAP.put("siebzig", 70);
+		TENS_MAP.put("achtzig", 80);
+		TENS_MAP.put("neunzig", 90);
 		
-		// scales 
-		wordsToScales = new HashMap<>();
-		wordsToScales.put("hundert", 100);
-		wordsToScales.put("tausend", 1000);
-		wordsToScales.put("million", 1000000);
-		wordsToScales.put("millionen", 1000000);
-		wordsToScales.put("milliarde", 1000000000);
-		wordsToScales.put("milliarden", 1000000000);
+		// initialize scales mapping
+		SCALES_MAP.put("hundert", 100);
+		SCALES_MAP.put("tausend", 1000);
+		SCALES_MAP.put("millionen", 1000000);
+		SCALES_MAP.put("million", 1000000);
+		SCALES_MAP.put("milliarden", 1000000000);
+		SCALES_MAP.put("milliarde", 1000000000);
 	}
 	
 	public static int parseToInteger(String numberWord) {
@@ -60,9 +74,9 @@ public class ParserUtils {
 		}
 		
 		numberWord = numberWord.trim();
-		numberWord = numberWord.toLowerCase();
+		numberWord = numberWord.toLowerCase(Locale.GERMAN);
 		
-		// handle a actual number
+		// handle actual number
 		try {
 			return Integer.parseInt(numberWord);
 		} catch (Exception e) {
@@ -71,7 +85,7 @@ public class ParserUtils {
 		// determine sign
 		int sign = 1;
 		if (numberWord.startsWith("minus")) {
-			numberWord = numberWord.substring(5, numberWord.length());
+			numberWord = numberWord.substring(5);
 			sign = -1;
 		}
 
@@ -80,65 +94,68 @@ public class ParserUtils {
 			return sign * 0;
 		}
 		
-		// calculate sum
-		int sum = 0;
-		int currentValue = 0;
-		outer: 
-		while (!numberWord.isEmpty()) {
-			// replace "und" one at a time to avoid cases like "h-und-ert"
-			if (numberWord.startsWith("und")) {
-				numberWord = numberWord.substring(3, numberWord.length());
-			}
-
-			// handle scales
-			for (Entry<String, Integer> wordToScale : wordsToScales.entrySet()) {
-				String number = wordToScale.getKey();
-				if (numberWord.startsWith(number)) {
-					numberWord = numberWord.substring(number.length(), numberWord.length());
-
-					Integer scale = wordToScale.getValue();
-					boolean storePartialCalculation = scale > 100;
-					if (storePartialCalculation) {
-						if (currentValue == 0) {
-							sum += scale;
-						} else {
-							sum += (currentValue * scale);
-						}
-						currentValue = 0; // re-set current value
-					} else {
-						if (currentValue == 0) {
-							currentValue = scale;
-						} else {
-							currentValue *= scale;
-						}
-					}
-					continue outer;
-				}
-			}
-			
-			// handles tens first to avoid misidentifications, e.g. "fünfzig" vs. "fünf
-			for (Entry<String, Integer> wordToTen : wordsToTens.entrySet()) {
-				String number = wordToTen.getKey();
-				if (numberWord.startsWith(number)) {
-					numberWord = numberWord.substring(number.length(), numberWord.length());
-					currentValue += wordToTen.getValue();
-					continue outer;
-				}
-			}
-			
-			// handle simple numbers
-			for (Entry<String, Integer> wordToSimpleNumber : wordsToSimpleNumbers.entrySet()) {
-				String number = wordToSimpleNumber.getKey();
-				if (numberWord.startsWith(number)) {
-					numberWord = numberWord.substring(number.length(), numberWord.length());
-					currentValue += wordToSimpleNumber.getValue();
-					continue outer;
-				}
-			}
-			
+		// try to parse the number recursively
+		List<Integer> results = new ArrayList<>();
+		parseNumberRecursive(numberWord, 0, 0, results);
+		if (results.isEmpty()) {
 			throw new ParserException("Could not parse '" + numberWord + "' to number.");
 		}
-		return sign * (sum + currentValue);
+		
+		return sign * results.get(0);
+	}
+
+	private static void parseNumberRecursive(String numberWord, 
+			int sum, int currentValue, List<Integer> results) {
+		if (numberWord.isEmpty()) {
+			results.add(sum + currentValue);
+			return;
+		}
+		
+		// remove "und" if present
+		if (numberWord.startsWith("und")) {
+			numberWord = numberWord.substring(3);
+		}
+		
+		// try to match scales first (as they have highest priority)
+		for (Entry<String, Integer> scale : SCALES_MAP.entrySet()) {
+			if (numberWord.startsWith(scale.getKey())) {
+				String remaining = numberWord.substring(scale.getKey().length());
+				
+                Integer scaleValue = scale.getValue();
+                boolean storePartialCalculation = scaleValue > 100;
+                if (storePartialCalculation) {
+                    if (currentValue == 0) {
+                        sum += scaleValue;
+                    } else {
+                        sum += (currentValue * scaleValue);
+                    }
+                    currentValue = 0; // re-set current value
+                } else {
+                    if (currentValue == 0) {
+                        currentValue = scaleValue;
+                    } else {
+                        currentValue *= scaleValue;
+                    }
+                }
+				parseNumberRecursive(remaining, sum, currentValue, results);
+			}
+		}
+		
+		// try to match tens
+		for (Entry<String, Integer> ten : TENS_MAP.entrySet()) {
+			if (numberWord.startsWith(ten.getKey())) {
+				String remaining = numberWord.substring(ten.getKey().length());
+				parseNumberRecursive(remaining, sum, currentValue + ten.getValue(), results);
+			}
+		}
+		
+		// try to match simple numbers
+		for (Entry<String, Integer> simple : SIMPLE_NUMBERS_MAP.entrySet()) {
+			if (numberWord.startsWith(simple.getKey())) {
+				String remaining = numberWord.substring(simple.getKey().length());
+				parseNumberRecursive(remaining, sum, currentValue + simple.getValue(), results);
+			}
+		}
 	}
 	
 	public static class ParserException extends RuntimeException {
