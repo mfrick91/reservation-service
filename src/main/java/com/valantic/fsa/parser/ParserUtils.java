@@ -1,6 +1,7 @@
 package com.valantic.fsa.parser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -11,10 +12,55 @@ import java.util.regex.Pattern;
 
 public class ParserUtils {
 
+	private static final Map<String, Integer> WEEKDAYS_MAP = new LinkedHashMap<>();
+	private static final Map<String, String> MONTH_MAP = new LinkedHashMap<>();
+	
 	private static final Map<String, Integer> SIMPLE_NUMBERS_MAP = new LinkedHashMap<>();
 	private static final Map<String, Integer> TENS_MAP = new LinkedHashMap<>();
 	private static final Map<String, Integer> SCALES_MAP = new LinkedHashMap<>();
+	
 	static  {
+		// initialize weekday mapping
+		WEEKDAYS_MAP.put("montag", 1);
+		WEEKDAYS_MAP.put("mo", 1);
+		WEEKDAYS_MAP.put("dienstag", 2);
+		WEEKDAYS_MAP.put("di", 2);
+		WEEKDAYS_MAP.put("mittwoch", 3);
+		WEEKDAYS_MAP.put("mi", 3);
+		WEEKDAYS_MAP.put("donnerstag", 4);
+		WEEKDAYS_MAP.put("do", 4);
+		WEEKDAYS_MAP.put("freitag", 5);
+		WEEKDAYS_MAP.put("fr", 5);
+		WEEKDAYS_MAP.put("samstag", 6);
+		WEEKDAYS_MAP.put("sa", 6);
+		WEEKDAYS_MAP.put("sonntag", 7);
+		WEEKDAYS_MAP.put("so", 7);
+		
+		// initialize month mapping
+		MONTH_MAP.put("januar", "1.");
+		MONTH_MAP.put("jan", "1.");
+		MONTH_MAP.put("februar", "2.");
+		MONTH_MAP.put("feb", "2.");
+		MONTH_MAP.put("maerz", "3.");
+		MONTH_MAP.put("maer", "3.");
+		MONTH_MAP.put("april", "4.");
+		MONTH_MAP.put("apr", "4.");
+		MONTH_MAP.put("mai", "5.");
+		MONTH_MAP.put("juni", "6.");
+		MONTH_MAP.put("jun", "6.");
+		MONTH_MAP.put("juli", "7.");
+		MONTH_MAP.put("jul", "7.");
+		MONTH_MAP.put("august", "8.");
+		MONTH_MAP.put("aug", "8.");
+		MONTH_MAP.put("september", "9.");
+		MONTH_MAP.put("sep", "9.");
+		MONTH_MAP.put("oktober", "10.");
+		MONTH_MAP.put("okt", "10.");
+		MONTH_MAP.put("november", "11.");
+		MONTH_MAP.put("nov", "11.");
+		MONTH_MAP.put("dezember", "12.");
+		MONTH_MAP.put("dez", "12.");
+		
 		// initialize simple number mapping
 		SIMPLE_NUMBERS_MAP.put("einen", 1);
 		SIMPLE_NUMBERS_MAP.put("eins", 1);
@@ -67,6 +113,14 @@ public class ParserUtils {
 		SCALES_MAP.put("million", 1000000);
 		SCALES_MAP.put("milliarden", 1000000000);
 		SCALES_MAP.put("milliarde", 1000000000);
+	}
+	
+	public static int weekdayToInteger(String weekday) {
+		return WEEKDAYS_MAP.get(weekday);
+	}
+	
+	public static Collection<String> weekdays() {
+		return WEEKDAYS_MAP.keySet();
 	}
 	
 	public static int parseToInteger(String numberWord) {
@@ -157,34 +211,6 @@ public class ParserUtils {
 				parseNumberRecursive(remaining, sum, currentValue + simple.getValue(), results);
 			}
 		}
-	}
-
-	private static final Map<String, String> MONTH_MAP = new LinkedHashMap<>();
-	static {
-		// initialize month mapping
-		MONTH_MAP.put("januar", "1.");
-		MONTH_MAP.put("jan", "1.");
-		MONTH_MAP.put("februar", "2.");
-		MONTH_MAP.put("feb", "2.");
-		MONTH_MAP.put("maerz", "3.");
-		MONTH_MAP.put("maer", "3.");
-		MONTH_MAP.put("april", "4.");
-		MONTH_MAP.put("apr", "4.");
-		MONTH_MAP.put("mai", "5.");
-		MONTH_MAP.put("juni", "6.");
-		MONTH_MAP.put("jun", "6.");
-		MONTH_MAP.put("juli", "7.");
-		MONTH_MAP.put("jul", "7.");
-		MONTH_MAP.put("august", "8.");
-		MONTH_MAP.put("aug", "8.");
-		MONTH_MAP.put("september", "9.");
-		MONTH_MAP.put("sep", "9.");
-		MONTH_MAP.put("oktober", "10.");
-		MONTH_MAP.put("okt", "10.");
-		MONTH_MAP.put("november", "11.");
-		MONTH_MAP.put("nov", "11.");
-		MONTH_MAP.put("dezember", "12.");
-		MONTH_MAP.put("dez", "12.");
 	}
 	
 	public static String normalizeText(String text) {
