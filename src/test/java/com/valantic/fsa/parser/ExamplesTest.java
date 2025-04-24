@@ -15,7 +15,8 @@ import com.valantic.fsa.model.ReservationRequest;
 
 class ExamplesTest {
 
-	private static final ReservationParser PARSER = new BasicReservationParser();
+//	private static final ReservationParser PARSER = new BasicReservationParser();
+	private static final ReservationParser PARSER = new OpenAIReservationParser();
     
 	private void assertRequest(ReservationRequest request, String expectedName, LocalDate expectedDate,
 			LocalTime expectedTime, Integer expectedNumberOfPeople) {

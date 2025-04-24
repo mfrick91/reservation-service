@@ -14,7 +14,8 @@ import com.valantic.fsa.model.ReservationRequest;
 
 class ReservationParserTest {
 
-	private static final ReservationParser PARSER = new BasicReservationParser();
+//	private static final ReservationParser PARSER = new BasicReservationParser();
+	private static final ReservationParser PARSER = new OpenAIReservationParser();
 
 	private static final String NAME = "Klaus Müller";
 	private static final LocalDate DATE = LocalDate.of(LocalDate.now().getYear(), 1, 1);
