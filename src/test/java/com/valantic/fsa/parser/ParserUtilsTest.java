@@ -202,6 +202,14 @@ class ParserUtilsTest {
         assertEquals("guten tag, 1 tisch fuer 8 mann fuer naechste woche 9 uhr abends, gruss franz schulze",
                 ParserUtils.normalizeText("Guten Tag, einen Tisch für acht Mann für nächste Woche 9 Uhr abends, Gruß Franz Schulze"));
     }
+    
+    @Test
+    void testStripQuotes() {
+        assertEquals("foo", ParserUtils.stripQuotes("'foo'"));
+        assertEquals("foo", ParserUtils.stripQuotes("\"foo\""));
+        assertEquals("foo", ParserUtils.stripQuotes("\'foo\'"));
+        assertEquals("foo", ParserUtils.stripQuotes("\"'\'foo\''\""));
+    }
 
     @Test
     void testParseInvalidInputs() {

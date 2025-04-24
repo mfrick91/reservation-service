@@ -25,4 +25,14 @@ public class DefaultReservationRequest implements ReservationRequest {
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("DefaultReservationRequest[")
+			.append("text='").append(this.getText())
+			.append("', timestamp=").append(this.getTimestamp())
+			.append("]");
+		return sb.toString();
+	}
 } 

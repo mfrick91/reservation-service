@@ -15,16 +15,16 @@ import com.valantic.fsa.model.ReservationRequest;
 
 class ExamplesTest {
 
-	private final ReservationParser parser = new BasicReservationParser();
-
+	private static final ReservationParser PARSER = new BasicReservationParser();
+    
 	private void assertRequest(ReservationRequest request, String expectedName, LocalDate expectedDate,
 			LocalTime expectedTime, Integer expectedNumberOfPeople) {
-		ReservationData response = parser.parse(request);
+		ReservationData response = PARSER.parse(request);
 		assertNotNull(response);
 		assertEquals(expectedName, response.getName());
 		assertEquals(expectedDate, response.getDate());
 		assertEquals(expectedTime, response.getTime());
-		assertEquals(expectedNumberOfPeople, response.getPeopleCount());
+		assertEquals(expectedNumberOfPeople, response.getNumberOfPeople());
 	}
 
 	private int year() {

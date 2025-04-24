@@ -8,13 +8,29 @@ public class DefaultReservationData implements ReservationData {
 	private String name;
 	private LocalDate date;
 	private LocalTime time;
-	private Integer peopleCount;
+	private int numberOfPeople;
 	
-	public DefaultReservationData(String name, LocalDate date, LocalTime time, Integer peopleCount) {
+	public DefaultReservationData() {
+		this("");
+	}
+	
+	public DefaultReservationData(String name) {
+		this(name, LocalDate.of(0, 0, 0));
+	}
+	
+	public DefaultReservationData(String name, LocalDate date) {
+		this(name, date, LocalTime.of(0, 0, 0, 0));
+	}
+	
+	public DefaultReservationData(String name, LocalDate date, LocalTime time) {
+		this(name, date, time, 0);
+	}
+	
+	public DefaultReservationData(String name, LocalDate date, LocalTime time, int numberOfPeople) {
 		this.name = name;
 		this.date = date;
 		this.time = time;
-		this.peopleCount = peopleCount;
+		this.numberOfPeople = numberOfPeople;
 	}
 
 	@Override
@@ -33,8 +49,8 @@ public class DefaultReservationData implements ReservationData {
 	}
 
 	@Override
-	public Integer getPeopleCount() {
-		return peopleCount;
+	public int getNumberOfPeople() {
+		return numberOfPeople;
 	}
 	
 	@Override
@@ -44,7 +60,8 @@ public class DefaultReservationData implements ReservationData {
 			.append("name='").append(this.getName())
 			.append("', date=").append(this.getDate())
 			.append(", time=").append(this.getTime())
-			.append(", people=").append(this.getPeopleCount());
+			.append(", numberOfPeople=").append(this.getNumberOfPeople())
+			.append("]");
 		return sb.toString();
 	}
 

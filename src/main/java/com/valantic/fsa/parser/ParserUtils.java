@@ -260,9 +260,25 @@ public class ParserUtils {
 		return sb.toString();
 	}
 	
+	public static String stripQuotes(String text) {
+		while (!text.isEmpty() 
+				&& ((text.charAt(0) == '"') 
+						|| (text.charAt(0) == '\"') 
+						|| (text.charAt(0) == '\''))) {
+			text = text.substring(1);
+		}
+		while (!text.isEmpty() 
+				&& ((text.charAt(text.length() - 1) == '"') 
+				|| (text.charAt(text.length() - 1) == '\"')
+				|| (text.charAt(text.length() - 1) == '\''))) {
+			text = text.substring(0, text.length() - 1);
+		}
+		return text;
+	}
+	
 	public static class ParserException extends RuntimeException {
 	
-		private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = -4303036383556218146L;
 
 		public ParserException(String message) {
 			super(message);

@@ -16,11 +16,15 @@ import com.valantic.fsa.model.ReservationRequest;
 public class BasicReservationParser implements ReservationParser {
 	
 	private static final DateTimeFormatter DATE_FORMAT = new DateTimeFormatterBuilder()
-			.appendPattern("[d[.]M[.]][d[.] MMMM]").parseDefaulting(ChronoField.YEAR, LocalDate.now().getYear())
-			.toFormatter().withLocale(Locale.GERMAN);
+			.appendPattern("[d[.]M[.]][d[.] MMMM]")
+			.parseDefaulting(ChronoField.YEAR, LocalDate.now().getYear())
+			.toFormatter()
+			.withLocale(Locale.GERMAN);
     
     private static final DateTimeFormatter TIME_FORMAT = new DateTimeFormatterBuilder()
-    		.appendPattern("H[:][mm]").parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0).toFormatter();
+    		.appendPattern("H[:][mm]")
+    		.parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+    		.toFormatter();
 
     @Override
     public ReservationData parse(ReservationRequest request) {
@@ -35,7 +39,7 @@ public class BasicReservationParser implements ReservationParser {
         
         LocalTime time = this.extractTime(normalizedText);
 
-        Integer peopleCount = this.extractPeopleCount(normalizedText);
+        int peopleCount = this.extractNumberOfPeople(normalizedText);
         
         return new DefaultReservationData(name, date, time, peopleCount);
     }
@@ -49,7 +53,7 @@ public class BasicReservationParser implements ReservationParser {
         if (matcher.find()) {
         	return text.substring(matcher.start(2), matcher.end(2));
         }
-        return null;
+        return "";
     }
     
     protected LocalDate extractDate(String normalizedText, LocalDate timestamp) {
@@ -72,7 +76,12 @@ public class BasicReservationParser implements ReservationParser {
     		return date;
     	}
         
-        return this.parseWeekday(normalizedText, timestamp);
+    	date = this.parseWeekday(normalizedText, timestamp);
+    	if (date != null) {
+    		return date;
+    	}
+    	
+        return timestamp;
     }
     
     private LocalDate parseRelativeDate(String text, LocalDate timestemp) {
@@ -81,7 +90,7 @@ public class BasicReservationParser implements ReservationParser {
     	LocalDate date = timestemp;
         while (inPattern.find()) {
             try {
-                int valueToAdd = Integer.valueOf(inPattern.group(1));
+                int valueToAdd = Integer.parseInt(inPattern.group(1));
                 switch (inPattern.group(2)) {
 					case "tagen":
 	                	date = date.plusDays(valueToAdd);
@@ -146,20 +155,18 @@ public class BasicReservationParser implements ReservationParser {
 	}
     
     protected LocalTime extractTime(String normalizedText) {
-		// match time pattern
-		Matcher timeMatcher = Pattern.compile("(\\d{1,2}:\\d{2})|(\\d{1,2})\\s*uhr").matcher(normalizedText);
-		LocalTime time = null;
-		if (timeMatcher.find()) {
-            time = LocalTime.parse(timeMatcher.group().replace("uhr", "").trim(), TIME_FORMAT);
-        } 
-		
-		LocalTime tmp = this.parseTimeRange(normalizedText);
-		if (tmp != null) {
-			time = tmp;
+    	// match time range pattern
+		LocalTime time = this.parseTimeRange(normalizedText);
+		if (time == null) {
+			// match time pattern
+			Matcher timeMatcher = Pattern.compile("(\\d{1,2}:\\d{2})|(\\d{1,2})\\s*uhr").matcher(normalizedText);
+			if (timeMatcher.find()) {
+	            time = LocalTime.parse(timeMatcher.group().replace("uhr", "").trim(), TIME_FORMAT);
+	        } 
 		}
 		
-        // apply hourly offset
         if (time != null) {
+            // apply hourly offsets
             if (this.isMorningTime(normalizedText) && time.getHour() > 12) {
                 return time.minusHours(12);
             }
@@ -167,9 +174,11 @@ public class BasicReservationParser implements ReservationParser {
             if (this.isEveningTime(normalizedText) && time.getHour() < 12) {
                 return time.plusHours(12);
             }
+            
+            return time;
         }
         
-        return time;
+        return LocalTime.of(0, 0, 0, 0);
     }
     
 	private LocalTime parseTimeRange(String text) {
@@ -220,68 +229,68 @@ public class BasicReservationParser implements ReservationParser {
 		return isEvening;
     }
 
-    protected Integer extractPeopleCount(String normalizedText) {
+    protected int extractNumberOfPeople(String normalizedText) {
        String[] peopleMarkers = new String[] { 
                 "person", "personen", "leute", "leuten", "freund", "freunde", "freunden", "kind", "kinder",
                 "herr", "herren", "mann", "maenner", "junge", "jungen",
                 "dame", "damen", "frau", "frauen", "maedchen", 
                 "gaeste", "gaesten" };
-		Matcher peopleCountMatcher = Pattern.compile("(\\d+)\\s+(" + String.join("|", peopleMarkers) + ")").matcher(normalizedText);
-		int peopleCount = -1;
-		while (peopleCountMatcher.find()) {
-			peopleCount = Math.max(peopleCount, Integer.valueOf(peopleCountMatcher.group(1)));
+		Matcher peopleMatcher = Pattern.compile("(\\d+)\\s+(" + String.join("|", peopleMarkers) + ")").matcher(normalizedText);
+		int numberOfPeople = 0;
+		while (peopleMatcher.find()) {
+			numberOfPeople = Math.max(numberOfPeople, Integer.parseInt(peopleMatcher.group(1)));
 		}
-		if (peopleCount != -1) {
-			return peopleCount;
+		if (numberOfPeople > 0) {
+			return numberOfPeople;
 		}
 
-		peopleCount = this.parsePeopleRange(normalizedText, peopleMarkers);
-		if (peopleCount != -1) {
-			return peopleCount;
+		numberOfPeople = this.parsePeopleRange(normalizedText, peopleMarkers);
+		if (numberOfPeople > 0) {
+			return numberOfPeople;
 		}
 		
-		peopleCount = this.parseQuantities(normalizedText, peopleMarkers);
-		if (peopleCount != -1) {
-			return peopleCount;
+		numberOfPeople = this.parseQuantities(normalizedText, peopleMarkers);
+		if (numberOfPeople > 0) {
+			return numberOfPeople;
 		}
 		
-        return null;
+        return numberOfPeople;
     }
     
     private int parsePeopleRange(String text, String[] markers) {
 		Matcher rangeMatcher = Pattern.compile("(zwischen|mit)\\s+(\\d+)\\s*(und|bis|-)\\s*(\\d+)\\s+(" 
 				+ String.join("|", markers) + ")").matcher(text);
-		int peopleCount = -1;
+		int numberOfPeople = 0;
 		while (rangeMatcher.find()) {
         	try {
         		boolean isTimePattern = text.substring(rangeMatcher.end(4)).trim().startsWith("uhr");
         		if (!isTimePattern) {
-        			Integer count1 = Integer.valueOf(rangeMatcher.group(2));
-					Integer count2 = Integer.valueOf(rangeMatcher.group(4));
-					peopleCount = Math.max(peopleCount, Math.max(count1, count2));
+        			Integer amount1 = Integer.parseInt(rangeMatcher.group(2));
+					Integer amount2 = Integer.parseInt(rangeMatcher.group(4));
+					numberOfPeople = Math.max(numberOfPeople, Math.max(amount1, amount2));
         		}
 			} catch (Exception e) {
 				// fail gracefully
 			}
         }
-		return peopleCount;
+		return numberOfPeople;
     }
     
     private int parseQuantities(String text, String[] markers) {
     	Matcher quantitiesMatcher = Pattern.compile("(zu|sind|fuer|mindestens|bis\\s*zu|nicht\\s*mehr\\s*als)\\s+(\\d+)(\\s+" 
         		+ String.join("|", markers) + ")?").matcher(text);
-		int peopleCount = -1;
+		int numberOfPeople = 0;
         while(quantitiesMatcher.find()) {
         	try {
         		boolean isTimePattern = text.substring(quantitiesMatcher.end(2)).trim().startsWith("uhr");
 				if (!isTimePattern) {
-	        		peopleCount = Math.max(peopleCount, Integer.valueOf(quantitiesMatcher.group(2)));
+	        		numberOfPeople = Math.max(numberOfPeople, Integer.parseInt(quantitiesMatcher.group(2)));
 				}
 			} catch (Exception e) {
 				// fail gracefully
 			}
         }
-        return peopleCount;
+        return numberOfPeople;
     }
 
 }

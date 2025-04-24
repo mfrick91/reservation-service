@@ -14,7 +14,7 @@ import com.valantic.fsa.model.ReservationRequest;
 
 class ReservationParserTest {
 
-	private final ReservationParser parser = new BasicReservationParser();
+	private static final ReservationParser PARSER = new BasicReservationParser();
 
 	private static final String NAME = "Klaus Müller";
 	private static final LocalDate DATE = LocalDate.of(LocalDate.now().getYear(), 1, 1);
@@ -23,12 +23,12 @@ class ReservationParserTest {
 
 	private void assertRequest(ReservationRequest request, String expectedName, LocalDate expectedDate,
 			LocalTime expectedTime, Integer expectedNumberOfPeople) {
-		ReservationData response = parser.parse(request);
+		ReservationData response = PARSER.parse(request);
 		assertNotNull(response);
 		assertEquals(expectedName, response.getName());
 		assertEquals(expectedDate, response.getDate());
 		assertEquals(expectedTime, response.getTime());
-		assertEquals(expectedNumberOfPeople, response.getPeopleCount());
+		assertEquals(expectedNumberOfPeople, response.getNumberOfPeople());
 	}
 
 	@Test
@@ -39,26 +39,37 @@ class ReservationParserTest {
 	}
 	
 	@Test
+	void testNestedStrings() {
+		ReservationRequest request = new DefaultReservationRequest(
+				"\"Hallo, bitte für 2 Personen einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller\"");
+		assertRequest(request, NAME, DATE, TIME, NUMBER_OF_PEOPLE);
+		
+		request = new DefaultReservationRequest(
+				"'Hallo, bitte für 2 Personen einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller'");
+		assertRequest(request, NAME, DATE, TIME, NUMBER_OF_PEOPLE);
+	}
+	
+	@Test
 	void testNullCases() {
 		ReservationRequest request = new DefaultReservationRequest(
 				"Hallo, bitte für 2 Personen einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank");
-		assertRequest(request, null, DATE, TIME, NUMBER_OF_PEOPLE);
+		assertRequest(request, "", DATE, TIME, NUMBER_OF_PEOPLE);
 		
 		request = new DefaultReservationRequest(
 				"Hallo, bitte für 2 Personen einen Tisch um 20:00 Uhr, vielen Dank Klaus Müller");
-		assertRequest(request, NAME, null, TIME, NUMBER_OF_PEOPLE);
+		assertRequest(request, NAME, request.getTimestamp().toLocalDate(), TIME, NUMBER_OF_PEOPLE);
 
 		request = new DefaultReservationRequest(
 				"Hallo, bitte für 2 Personen einen Tisch am 1. Januar, vielen Dank Klaus Müller");
-		assertRequest(request, NAME, DATE, null, NUMBER_OF_PEOPLE);
+		assertRequest(request, NAME, DATE, LocalTime.of(0, 0, 0, 0), NUMBER_OF_PEOPLE);
 		
 		request = new DefaultReservationRequest(
 				"Hallo, bitte einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller");
-		assertRequest(request, NAME, DATE, TIME, null);
+		assertRequest(request, NAME, DATE, TIME, 0);
 	}
 
 	@Test
-	void testPeopleCount() {
+	void testNumberOfPeopleCount() {
 		ReservationRequest request = new DefaultReservationRequest(
 	            "Hallo, bitte für zwei Personen einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller");
 		assertRequest(request, NAME, DATE, TIME, NUMBER_OF_PEOPLE);
@@ -189,4 +200,5 @@ class ReservationParserTest {
             "Hallo, bitte für 2 bis 4 Personen, mindestens 2, maximal 4 Personen einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller");
 		assertRequest(request, NAME, DATE, TIME, 4);
 	}
+	
 } 
