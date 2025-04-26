@@ -13,26 +13,15 @@ import com.valantic.fsa.model.DefaultReservationData;
 import com.valantic.fsa.model.ReservationData;
 import com.valantic.fsa.model.ReservationRequest;
 
-/**
- * Basic implementation of the {@code ReservationParser} interface.
- *	
- * @author M. Frick
- */
 public class BasicReservationParser implements ReservationParser {
 	
-	/**
-	 * The date formatter for the date of the reservation.
-	 */
 	private static final DateTimeFormatter DATE_FORMAT = new DateTimeFormatterBuilder()
 			.appendPattern("[d[.]M[.]][d[.] MMMM]")
 			.parseDefaulting(ChronoField.YEAR, LocalDate.now().getYear())
 			.toFormatter()
 			.withLocale(Locale.GERMAN);
-
-	/**
-	 * The time formatter for the time of the reservation.
-	 */
-	private static final DateTimeFormatter TIME_FORMAT = new DateTimeFormatterBuilder()
+    
+    private static final DateTimeFormatter TIME_FORMAT = new DateTimeFormatterBuilder()
     		.appendPattern("H[:][mm]")
     		.parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
     		.toFormatter();
@@ -55,95 +44,75 @@ public class BasicReservationParser implements ReservationParser {
         return new DefaultReservationData(name, date, time, peopleCount);
     }
 
-    /**
-     * Extracts the name of the person making the reservation from the text.
-     * 
-     * @param text the text to extract the name from
-     * @return the name of the person making the reservation
-     */
     protected String extractName(String text) {
     	// match closing pattern
     	String[] closings = new String[] { 
    			 "grüßen", "grüssen", "grueßen", "gruessen", "grüße", "grueße", "grüsse", "gruesse", "gruß", "gruss", "dank", "danke" };
         Matcher matcher = Pattern.compile("(" + String.join("|", closings) + ").*?([a-zäüöß]+\\s[a-zäüöß]+)")
         		.matcher(text.toLowerCase());
-		if (matcher.find()) {
-			return text.substring(matcher.start(2), matcher.end(2));
-		}
-		return "";
-	}
-
-    /**
-     * Extracts the date of the reservation from the text.
-     * 
-     * @param normalizedText the normalized text to extract the date from
-     * @param timestamp the timestamp of the reservation request
-     * @return the date of the reservation
-     */
+        if (matcher.find()) {
+        	return text.substring(matcher.start(2), matcher.end(2));
+        }
+        return "";
+    }
+    
     protected LocalDate extractDate(String normalizedText, LocalDate timestamp) {
     	// match date pattern, e.g., 12.04
     	Matcher dateMatcher = Pattern.compile("(\\d{1,2}[.]\\d{1,2})[.]").matcher(normalizedText);
-		if (dateMatcher.find()) {
-			return LocalDate.parse(dateMatcher.group(), DATE_FORMAT);
-		}
-
-		// special cases
-		if (normalizedText.contains("morgen")) {
-			if (normalizedText.contains("uebermorgen")) {
-				return timestamp.plusDays(2);
-			}
-			return timestamp.plusDays(1);
-		}
-
-		LocalDate date = this.parseRelativeDate(normalizedText, timestamp);
-		if (date != null) {
-			return date;
-		}
-
-		date = this.parseWeekday(normalizedText, timestamp);
-		if (date != null) {
-			return date;
-		}
-
-		return timestamp;
-	}
-
-    /**
-     * Parses a relative date from the text.
-     * 
-     * @param text the text to parse the relative date from
-     * @param timestemp the timestamp of the reservation request
-     * @return the relative date
-     */
+        if (dateMatcher.find()) {
+            return LocalDate.parse(dateMatcher.group(), DATE_FORMAT);
+        }
+        
+    	// special cases
+    	if (normalizedText.contains("morgen")) {
+        	if (normalizedText.contains("uebermorgen")) {
+        		return timestamp.plusDays(2);
+        	} 
+    		return timestamp.plusDays(1);
+    	}
+    	
+    	LocalDate date = this.parseRelativeDate(normalizedText, timestamp);
+    	if (date != null) {
+    		return date;
+    	}
+        
+    	date = this.parseWeekday(normalizedText, timestamp);
+    	if (date != null) {
+    		return date;
+    	}
+    	
+        return timestamp;
+    }
+    
     private LocalDate parseRelativeDate(String text, LocalDate timestemp) {
     	// match in x pattern
     	Matcher inPattern = Pattern.compile("in\\s+(\\d+)\\s+(tagen|wochen|monaten|jahren)").matcher(text);
-		LocalDate date = timestemp;
-		while (inPattern.find()) {
-			try {
-				int valueToAdd = Integer.parseInt(inPattern.group(1));
-				switch (inPattern.group(2)) {
+    	LocalDate date = timestemp;
+        while (inPattern.find()) {
+            try {
+                int valueToAdd = Integer.parseInt(inPattern.group(1));
+                switch (inPattern.group(2)) {
 					case "tagen":
-						date = date.plusDays(valueToAdd);
+	                	date = date.plusDays(valueToAdd);
 						break;
 					case "wochen":
-						date = date.plusWeeks(valueToAdd);
+	                	date = date.plusWeeks(valueToAdd);
 						break;
 					case "monaten":
-						date = date.plusMonths(valueToAdd);
+	                	date = date.plusMonths(valueToAdd);
 						break;
 					case "jahren":
-						date = date.plusYears(valueToAdd);
+	                	date = date.plusYears(valueToAdd);
 						break;
 				}
-			} catch (Exception e) {
-				// fail gracefully
-			}
-		}
-		if (date != timestemp) {
-			return date;
-		}
-
+            } catch (Exception e) {
+                // fail gracefully
+            }
+        }
+    	if (date != timestemp) {
+    		return date;
+    	}
+    	
     	// match next day/week/month/year pattern
 		Matcher nextMatcher = Pattern.compile("(naechste|naechsten|naechstes|kommende|kommenden|kommendes)\\s+("
 				+ "tage|woche|monat|jahr)").matcher(text);
@@ -163,17 +132,10 @@ public class BasicReservationParser implements ReservationParser {
 				return timestemp.plusYears(amount);
 			}
 		}
-
-		return null;
-	}
-
-	/**
-	 * Parses a weekday from the text.
-	 * 
-	 * @param text      the text to parse the weekday from
-	 * @param timestamp the timestamp of the reservation request
-	 * @return the weekday
-	 */
+    	
+        return null;
+    }
+    
 	private LocalDate parseWeekday(String text, LocalDate timestamp) {
 		Matcher weekdayMatcher = Pattern.compile("(|naechste|naechsten|naechstes|kommende|kommenden|kommendes)\\s+("
 				+ String.join("|", ParserUtils.weekdays()) + ")").matcher(text);
@@ -191,46 +153,34 @@ public class BasicReservationParser implements ReservationParser {
 		}
 		return null;
 	}
-
-	/**
-	 * Extracts the time of the reservation from the text.
-	 * 
-	 * @param normalizedText the normalized text to extract the time from
-	 * @return the time of the reservation
-	 */
-	protected LocalTime extractTime(String normalizedText) {
-		// match time range pattern
+    
+    protected LocalTime extractTime(String normalizedText) {
+    	// match time range pattern
 		LocalTime time = this.parseTimeRange(normalizedText);
 		if (time == null) {
 			// match time pattern
 			Matcher timeMatcher = Pattern.compile("(\\d{1,2}:\\d{2})|(\\d{1,2})\\s*uhr").matcher(normalizedText);
 			if (timeMatcher.find()) {
-				time = LocalTime.parse(timeMatcher.group().replace("uhr", "").trim(), TIME_FORMAT);
-			}
+	            time = LocalTime.parse(timeMatcher.group().replace("uhr", "").trim(), TIME_FORMAT);
+	        } 
 		}
+		
+        if (time != null) {
+            // apply hourly offsets
+            if (this.isMorningTime(normalizedText) && time.getHour() > 12) {
+                return time.minusHours(12);
+            }
 
-		if (time != null) {
-			// apply hourly offsets
-			if (this.isMorningTime(normalizedText) && time.getHour() > 12) {
-				return time.minusHours(12);
-			}
-
-			if (this.isEveningTime(normalizedText) && time.getHour() < 12) {
-				return time.plusHours(12);
-			}
-
-			return time;
-		}
-
-		return LocalTime.of(0, 0, 0, 0);
-	}
-
-	/**
-	 * Parses a time range from the text.
-	 * 
-	 * @param text the text to parse the time range from
-	 * @return the time range
-	 */
+            if (this.isEveningTime(normalizedText) && time.getHour() < 12) {
+                return time.plusHours(12);
+            }
+            
+            return time;
+        }
+        
+        return LocalTime.of(0, 0, 0, 0);
+    }
+    
 	private LocalTime parseTimeRange(String text) {
 		Matcher rangeMatcher = Pattern
 				.compile("zwischen\\s+(\\d{1,2}:\\d{2}|\\d{1,2})\\s*(und|bis|-)\\s*(\\d{1,2}:\\d{2}|\\d{1,2})\\s*uhr")
@@ -242,16 +192,10 @@ public class BasicReservationParser implements ReservationParser {
 		}
 		return null;
 	}
-
-	/**
-	 * Checks if the time is morning.
-	 * 
-	 * @param normalizedText the normalized text to check the time from
-	 * @return true if the time is morning, false otherwise
-	 */
-	private boolean isMorningTime(String normalizedText) {
-		boolean isMorning = false;
-		String[] morningMarkers = new String[] { "morgens", "fruehstueck" };
+    
+    private boolean isMorningTime(String normalizedText) {
+    	boolean isMorning = false;
+    	String[] morningMarkers = new String []{ "morgens", "fruehstueck" };
 		for (String morningMarker : morningMarkers) {
 			isMorning = normalizedText.contains(morningMarker);
 			if (isMorning) {
@@ -265,17 +209,11 @@ public class BasicReservationParser implements ReservationParser {
 			}
 		}
 		return isMorning;
-	}
-
-	/**
-	 * Checks if the time is evening.
-	 * 
-	 * @param normalizedText the normalized text to check the time from
-	 * @return true if the time is evening, false otherwise
-	 */
-	private boolean isEveningTime(String normalizedText) {
-		boolean isEvening = false;
-		String[] eveningMarkers = new String[] { "abends", "abendessen" };
+    }
+    
+    private boolean isEveningTime(String normalizedText) {
+    	boolean isEvening = false;
+    	String[] eveningMarkers = new String []{ "abends", "abendessen" };
 		for (String eveningMarker : eveningMarkers) {
 			isEvening = normalizedText.contains(eveningMarker);
 			if (isEvening) {
@@ -289,14 +227,8 @@ public class BasicReservationParser implements ReservationParser {
 			}
 		}
 		return isEvening;
-	}
+    }
 
-    /**
-     * Extracts the number of people for the reservation from the text.
-     * 
-     * @param normalizedText the normalized text to extract the number of people from
-     * @return the number of people for the reservation
-     */
     protected int extractNumberOfPeople(String normalizedText) {
        String[] peopleMarkers = new String[] { 
                 "person", "personen", "leute", "leuten", "freund", "freunde", "freunden", "kind", "kinder",
@@ -304,7 +236,7 @@ public class BasicReservationParser implements ReservationParser {
                 "dame", "damen", "frau", "frauen", "maedchen", 
                 "gaeste", "gaesten" };
 		Matcher peopleMatcher = Pattern.compile("(\\d+)\\s+(" + String.join("|", peopleMarkers) + ")").matcher(normalizedText);
-		int numberOfPeople = -1;
+		int numberOfPeople = 0;
 		while (peopleMatcher.find()) {
 			numberOfPeople = Math.max(numberOfPeople, Integer.parseInt(peopleMatcher.group(1)));
 		}
@@ -316,63 +248,49 @@ public class BasicReservationParser implements ReservationParser {
 		if (numberOfPeople > 0) {
 			return numberOfPeople;
 		}
-
+		
 		numberOfPeople = this.parseQuantities(normalizedText, peopleMarkers);
 		if (numberOfPeople > 0) {
 			return numberOfPeople;
 		}
-
-		return numberOfPeople;
+		
+        return numberOfPeople;
     }
     
-    /**
-     * Parses a people range from the text.
-     * 
-     * @param text the text to parse the people range from
-     * @param markers the markers to parse the people range from
-     * @return the number of people for the reservation
-     */
-	private int parsePeopleRange(String text, String[] markers) {
+    private int parsePeopleRange(String text, String[] markers) {
 		Matcher rangeMatcher = Pattern.compile("(zwischen|mit)\\s+(\\d+)\\s*(und|bis|-)\\s*(\\d+)\\s+(" 
 				+ String.join("|", markers) + ")").matcher(text);
 		int numberOfPeople = 0;
 		while (rangeMatcher.find()) {
-			try {
-				boolean isTimePattern = text.substring(rangeMatcher.end(4)).trim().startsWith("uhr");
-				if (!isTimePattern) {
-					Integer amount1 = Integer.parseInt(rangeMatcher.group(2));
+        	try {
+        		boolean isTimePattern = text.substring(rangeMatcher.end(4)).trim().startsWith("uhr");
+        		if (!isTimePattern) {
+        			Integer amount1 = Integer.parseInt(rangeMatcher.group(2));
 					Integer amount2 = Integer.parseInt(rangeMatcher.group(4));
 					numberOfPeople = Math.max(numberOfPeople, Math.max(amount1, amount2));
-				}
+        		}
 			} catch (Exception e) {
 				// fail gracefully
 			}
-		}
+        }
 		return numberOfPeople;
-	}
-
-	/**
-	 * Parses a quantities from the text.
-	 * 
-	 * @param text the text to parse the quantities from
-	 * @param markers the markers to parse the quantities from
-	 * @return the number of people for the reservation
-	 */
+    }
+    
     private int parseQuantities(String text, String[] markers) {
     	Matcher quantitiesMatcher = Pattern.compile("(zu|sind|fuer|mindestens|bis\\s*zu|nicht\\s*mehr\\s*als)\\s+(\\d+)(\\s+" 
         		+ String.join("|", markers) + ")?").matcher(text);
 		int numberOfPeople = 0;
-		while (quantitiesMatcher.find()) {
-			try {
-				boolean isTimePattern = text.substring(quantitiesMatcher.end(2)).trim().startsWith("uhr");
+        while(quantitiesMatcher.find()) {
+        	try {
+        		boolean isTimePattern = text.substring(quantitiesMatcher.end(2)).trim().startsWith("uhr");
 				if (!isTimePattern) {
-					numberOfPeople = Math.max(numberOfPeople, Integer.parseInt(quantitiesMatcher.group(2)));
+	        		numberOfPeople = Math.max(numberOfPeople, Integer.parseInt(quantitiesMatcher.group(2)));
 				}
 			} catch (Exception e) {
 				// fail gracefully
 			}
-		}
-		return numberOfPeople;
-	}
+        }
+        return numberOfPeople;
+    }
 
 }
