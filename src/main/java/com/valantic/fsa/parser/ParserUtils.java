@@ -10,16 +10,39 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Utility class for parsing reservation requests.
+ * 
+ * @author M. Frick
+ */
 public class ParserUtils {
 
+	/**
+	 * Map of weekdays (e.g., "montag", "mo") to their integer values.
+	 */
 	private static final Map<String, Integer> WEEKDAYS_MAP = new LinkedHashMap<>();
+
+	/**
+	 * Map of months (e.g., "januar", "jan") to their numeric representations.
+	 */
 	private static final Map<String, String> MONTH_MAP = new LinkedHashMap<>();
-	
+
+	/**
+	 * Map of simple numbers (e.g., "eins", "zwei", "drei") to their integer values.
+	 */	
 	private static final Map<String, Integer> SIMPLE_NUMBERS_MAP = new LinkedHashMap<>();
+
+	/**
+	 * Map of tens (e.g., "zwanzig", "dreißig") to their integer values.
+	 */
 	private static final Map<String, Integer> TENS_MAP = new LinkedHashMap<>();
+
+	/**
+	 * Map of scales (e.g., "hundert", "tausend") to their integer values.
+	 */	
 	private static final Map<String, Integer> SCALES_MAP = new LinkedHashMap<>();
-	
-	static  {
+
+	static {
 		// initialize weekday mapping
 		WEEKDAYS_MAP.put("montag", 1);
 		WEEKDAYS_MAP.put("mo", 1);
@@ -114,29 +137,46 @@ public class ParserUtils {
 		SCALES_MAP.put("milliarden", 1000000000);
 		SCALES_MAP.put("milliarde", 1000000000);
 	}
-	
+
+	/**
+	 * Converts a weekday string to its corresponding integer value.
+	 * 
+	 * @param weekday the weekday string to convert
+	 * @return the integer value of the weekday
+	 */
 	public static int weekdayToInteger(String weekday) {
 		return WEEKDAYS_MAP.get(weekday);
 	}
-	
+
+	/**
+	 * Returns an unmodifiable collection of all weekdays.
+	 * 
+	 * @return a collection of all weekdays
+	 */
 	public static Collection<String> weekdays() {
 		return WEEKDAYS_MAP.keySet();
 	}
-	
+
+	/**
+	 * Parses a number word to its corresponding integer value.
+	 * 
+	 * @param numberWord the number word to parse
+	 * @return the integer value of the number word
+	 */
 	public static int parseToInteger(String numberWord) {
 		if ((numberWord == null) || numberWord.isEmpty()) {
 			throw new ParserException("Input is empty!");
 		}
-		
+
 		numberWord = numberWord.trim();
 		numberWord = numberWord.toLowerCase(Locale.GERMAN);
-		
+
 		// handle actual number
 		try {
 			return Integer.parseInt(numberWord);
 		} catch (Exception e) {
 		}
-		
+
 		// determine sign
 		int sign = 1;
 		if (numberWord.startsWith("minus")) {
@@ -148,14 +188,14 @@ public class ParserUtils {
 		if (numberWord.equals("null")) {
 			return sign * 0;
 		}
-		
+
 		// try to parse the number recursively
 		List<Integer> results = new ArrayList<>();
 		parseNumberRecursive(numberWord, 0, 0, results);
 		if (results.isEmpty()) {
 			throw new ParserException("Could not parse '" + numberWord + "' to number.");
 		}
-		
+
 		return sign * results.get(0);
 	}
 
@@ -165,17 +205,17 @@ public class ParserUtils {
 			results.add(sum + currentValue);
 			return;
 		}
-		
+
 		// remove "und" if present
 		if (numberWord.startsWith("und")) {
 			numberWord = numberWord.substring(3);
 		}
-		
+
 		// try to match scales first (as they have highest priority)
 		for (Entry<String, Integer> scale : SCALES_MAP.entrySet()) {
 			if (numberWord.startsWith(scale.getKey())) {
 				String remaining = numberWord.substring(scale.getKey().length());
-				
+
                 Integer scaleValue = scale.getValue();
                 boolean storePartialCalculation = scaleValue > 100;
                 if (storePartialCalculation) {
@@ -195,7 +235,7 @@ public class ParserUtils {
 				parseNumberRecursive(remaining, sum, currentValue, results);
 			}
 		}
-		
+
 		// try to match tens
 		for (Entry<String, Integer> ten : TENS_MAP.entrySet()) {
 			if (numberWord.startsWith(ten.getKey())) {
@@ -203,7 +243,7 @@ public class ParserUtils {
 				parseNumberRecursive(remaining, sum, currentValue + ten.getValue(), results);
 			}
 		}
-		
+
 		// try to match simple numbers
 		for (Entry<String, Integer> simple : SIMPLE_NUMBERS_MAP.entrySet()) {
 			if (numberWord.startsWith(simple.getKey())) {
@@ -212,16 +252,23 @@ public class ParserUtils {
 			}
 		}
 	}
-	
+
+	/**
+	 * Normalizes a text string by converting it to lowercase, removing special
+	 * characters, and replacing month names with their numeric representations.
+	 * 
+	 * @param text the text to normalize
+	 * @return the normalized text
+	 */
 	public static String normalizeText(String text) {
 		if (text == null) {
 			return "";
 		}
-		
+
 		// convert to lower case
 		String normalizedText = text.trim().toLowerCase(Locale.GERMAN);
 
-    	// remove special characters
+		// remove special characters
 		normalizedText = normalizedText
 				.replace("ä", "ae").replace("ü", "ue")
     			.replace("ö", "oe").replace("ß", "ss"); 
@@ -259,7 +306,13 @@ public class ParserUtils {
 		
 		return sb.toString();
 	}
-	
+
+	/**
+	 * Strips quotes from the beginning and end of a text string.
+	 * 
+	 * @param text the text to strip quotes from
+	 * @return the text with quotes removed
+	 */
 	public static String stripQuotes(String text) {
 		while (!text.isEmpty() 
 				&& ((text.charAt(0) == '"') 
@@ -275,11 +328,21 @@ public class ParserUtils {
 		}
 		return text;
 	}
-	
+
+	/**
+	 * Exception thrown when parsing fails.
+	 * 
+	 * @author M. Frick
+	 */
 	public static class ParserException extends RuntimeException {
-	
+
 		private static final long serialVersionUID = -4303036383556218146L;
 
+		/**
+		 * Constructs a new ParserException with the specified message.
+		 * 
+		 * @param message the error message
+		 */
 		public ParserException(String message) {
 			super(message);
 		}
