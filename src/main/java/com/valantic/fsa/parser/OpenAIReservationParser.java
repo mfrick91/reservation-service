@@ -18,6 +18,28 @@ import com.valantic.fsa.model.ReservationRequest;
  * @author M. Frick
  */
 public class OpenAIReservationParser implements ReservationParser {
+	
+	/**
+	 * The prompt to asked.
+	 */
+	private static final String PROMPT =             
+			"Extrahiere aus folgendem Text die folgenden Informationen im Format: (Name, Datum, Uhrzeit, Personen)\n" +
+            "Name in dem Format wie der Name im Text vorkommt (z. B. ist der Name hochgestellt im Text, dann den Name auch hochgestellt lassen).\n" +
+    		"Datum als TT.MM.2025 (z. B. 01.05.2025).\n" +
+            "Uhrzeit im Format HH:mm (z. B. 09:45).\n"+ 
+    		"Personen als Integer.\n" +
+            "Relative Datumsangaben immer vom Zeitpunkt %s berechnen.\n" +
+            "Angaben wie \"übernächste X\" berechnet sich als %s + 2 X, wobei X ein Tag, eine Woche, ein Monat ein Jahr oder ein Wochentag sein kann.\n" +
+            "Bei Zeitangaben wie z. B. \"zwischen 18 und 19 Uhr \" immer die kleinere Zeit nehmen.\n" +
+            "Bei Personenangaben wie z. B. \"vier bis sechs Personen\" immer die größere Personenanzahl nehmen.\n" +
+            "Fehlende Names-, Datums- und Zeitangaben als leerer String \"\". Fehlende Personenangaben als -1.\n\n" +
+//            "Beispiele:\n" +
+//            "\"Guten Tag, einen Tisch für 8 Mann am 1.5. 9 Uhr abends, Gruß Franz Schulze\"-> (Franz Schulze, 01.05.2025, 21:00, 8)\n" +
+//            "\"Guten Tag, einen Tisch für vier Personen am kommenden Montagabend um 20 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 28.04.2025, 20:00, 4)\n" +
+//            "\"Guten Tag, einen Tisch für sieben für den übernächsten Freitagmittag um 12 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 02.05.2025, 12:00, 7)\n" +
+//            "\"Guten Tag, wir sind 9 und brauchen einen Tisch für den übernächsten Montag um 22 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 05.05.2025, 22:00, 9)\n" +
+//            "\"Guten Tag, einen Tisch für vier Personen für den übernächsten Monat um 18 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 24.06.2025, 18:00, 4)\n" +
+            "Text:\n \"%s\"";
 
 	/**
      * The date formatter.
@@ -53,26 +75,7 @@ public class OpenAIReservationParser implements ReservationParser {
         String timestamp = request.getTimestamp().toLocalDate().toString();
         String text = request.getText();
 
-		String prompt = String.format(
-            "Extrahiere aus folgendem Text die folgenden Informationen im Format: (Name, Datum, Uhrzeit, Personen)\n" +
-            "Name in dem Format wie der Name im Text vorkommt (z. B. ist der Name hochgestellt im Text, dann den Name auch hochgestellt lassen).\n" +
-    		"Datum als TT.MM.2025 (z. B. 01.05.2025).\n" +
-            "Uhrzeit im Format HH:mm (z. B. 09:45).\n"+ 
-    		"Personen als Integer.\n" +
-            "Relative Datumsangaben immer vom Zeitpunkt %s berechnen.\n" +
-            "Angaben wie \"übernächste X\" berechnet sich als %s + 2 X, wobei X ein Tag, eine Woche, ein Monat ein Jahr oder ein Wochentag sein kann.\n" +
-            "Bei Zeitangaben wie z. B. \"zwischen 18 und 19 Uhr \" immer die kleinere Zeit nehmen.\n" +
-            "Bei Personenangaben wie z. B. \"vier bis sechs Personen\" immer die größere Personenanzahl nehmen.\n" +
-            "Fehlende Names-, Datums- und Zeitangaben als leerer String \"\". Fehlende Personenangaben als -1.\n\n" +
-//            "Beispiele:\n" +
-//            "\"Guten Tag, einen Tisch für 8 Mann am 1.5. 9 Uhr abends, Gruß Franz Schulze\"-> (Franz Schulze, 01.05.2025, 21:00, 8)\n" +
-//            "\"Guten Tag, einen Tisch für vier Personen am kommenden Montagabend um 20 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 28.04.2025, 20:00, 4)\n" +
-//            "\"Guten Tag, einen Tisch für sieben für den übernächsten Freitagmittag um 12 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 02.05.2025, 12:00, 7)\n" +
-//            "\"Guten Tag, wir sind 9 und brauchen einen Tisch für den übernächsten Montag um 22 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 05.05.2025, 22:00, 9)\n" +
-//            "\"Guten Tag, einen Tisch für vier Personen für den übernächsten Monat um 18 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 24.06.2025, 18:00, 4)\n" +
-            "Text:\n \"%s\"", timestamp, timestamp, text
-        );
-        String response = openAi.ask(prompt);
+		String response = openAi.ask(String.format(PROMPT, timestamp, timestamp, text));
         return parseResponse(response, request);
     }
 

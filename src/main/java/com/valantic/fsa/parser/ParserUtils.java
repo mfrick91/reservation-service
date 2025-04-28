@@ -42,6 +42,11 @@ public class ParserUtils {
 	 */	
 	private static final Map<String, Integer> SCALES_MAP = new LinkedHashMap<>();
 
+	/**
+	 * The number word pattern to match.
+	 */
+	private static final Pattern NUMBER_WORD_PATTERN = Pattern.compile("\\b([a-z]+)\\b");
+
 	static {
 		// initialize weekday mapping
 		WEEKDAYS_MAP.put("montag", 1);
@@ -279,34 +284,38 @@ public class ParserUtils {
 		
 		// replace month names with numbers
 		for (Map.Entry<String, String> entry : MONTH_MAP.entrySet()) {
-			Pattern pattern = Pattern.compile("(\\b" + entry.getKey() + "\\b)|(\\.\\s(" + entry.getKey() + "))");
-			Matcher matcher = pattern.matcher(normalizedText);
+			Matcher monthMatcher = Pattern.compile("(\\b" + entry.getKey() + "\\b)|(\\.\\s+(" + entry.getKey() + "))").matcher(normalizedText);
 			StringBuilder sb = new StringBuilder();
-			if (matcher.find()) {
-				if (matcher.group().startsWith(".")) {
-					matcher.appendReplacement(sb, "." + entry.getValue());
-				} else {
-					matcher.appendReplacement(sb, entry.getValue());
+			if (monthMatcher.find()) {
+				String rawMonth = monthMatcher.group();
+				String month = entry.getValue();
+				if (rawMonth.startsWith(".")) {
+					month = "." + month;
 				}
+				
+				Matcher monthAndYearMatcher = Pattern.compile(rawMonth + "\\s+(\\d{2,4})").matcher(normalizedText);
+				if (monthAndYearMatcher.find()) {
+					month += monthAndYearMatcher.group(1);
+				}
+				monthMatcher.appendReplacement(sb, month);
 			}
-			matcher.appendTail(sb);
+			monthMatcher.appendTail(sb);
 			normalizedText = sb.toString();
 		}
 		
 		// replace number words with numbers
-		Pattern wordPattern = Pattern.compile("\\b([a-z]+)\\b");
-		Matcher matcher = wordPattern.matcher(normalizedText);
+		Matcher wordMatcher = NUMBER_WORD_PATTERN.matcher(normalizedText);
 		StringBuilder sb = new StringBuilder();
-		while (matcher.find()) {
-			String word = matcher.group();
+		while (wordMatcher.find()) {
+			String word = wordMatcher.group();
 			// try number parsing
 			try {
 				int number = parseToInteger(word);
-				matcher.appendReplacement(sb, String.valueOf(number));
+				wordMatcher.appendReplacement(sb, String.valueOf(number));
 			} catch (ParserException e) {
 			}
 		}
-		matcher.appendTail(sb);
+		wordMatcher.appendTail(sb);
 		
 		return sb.toString();
 	}
@@ -318,19 +327,6 @@ public class ParserUtils {
 	 * @return the text with quotes removed
 	 */
 	public static String stripQuotes(String text) {
-//		while (!text.isEmpty() 
-//				&& ((text.charAt(0) == '"') 
-//						|| (text.charAt(0) == '\"') 
-//						|| (text.charAt(0) == '\''))) {
-//			text = text.substring(1);
-//		}
-//		while (!text.isEmpty() 
-//				&& ((text.charAt(text.length() - 1) == '"') 
-//				|| (text.charAt(text.length() - 1) == '\"')
-//				|| (text.charAt(text.length() - 1) == '\''))) {
-//			text = text.substring(0, text.length() - 1);
-//		}
-//		return text;
 		return text.replace("'", "").replace("\'", "").replace("\"", "").trim();
 	}
 

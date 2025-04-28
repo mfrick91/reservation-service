@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,8 +105,8 @@ public class OpenAIClient {
                 "model", model,
                 "messages", new Object[] {
                     Map.of("role", "user", "content", userPrompt)
-                },
-                "temperature", 0.2
+                }
+//                ", temperature", 0.2
             );
 
             String json = mapper.writeValueAsString(body);
@@ -120,7 +121,7 @@ public class OpenAIClient {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             Map<?, ?> jsonMap = mapper.readValue(response.body(), Map.class);
-            return (String) ((Map<?, ?>)((Map<?, ?>)((java.util.List<?>) jsonMap.get("choices")).get(0)).get("message")).get("content");
+            return (String) ((Map<?, ?>)((Map<?, ?>)((List<?>) jsonMap.get("choices")).get(0)).get("message")).get("content");
 
         } catch (Exception e) {
         	String message = e.getMessage();

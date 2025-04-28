@@ -49,6 +49,31 @@ abstract class AbstractReservationParserTest {
 	            "Hallo, bitte einen Tisch zu zwölft für den 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller");
 		assertRequestEquals(twelvePeopleRequest, NAME, DATE, TIME, 12);
 	}
+	
+	@Test
+	void testParseDates() {
+		LocalDateTime newYear2024 = LocalDateTime.of(2024, 1, 1, 9, 0);
+		
+		ReservationRequest newYearRequest = new DefaultReservationRequest(
+	            "Hallo, bitte für zwei Personen einen Tisch am 1.1 um 20:00 Uhr, vielen Dank Klaus Müller");
+		assertRequestEquals(newYearRequest, NAME, DATE, TIME, NUMBER_OF_PEOPLE);
+		
+		ReservationRequest newYearRequest2 = new DefaultReservationRequest(
+	            "Hallo, bitte für zwei Personen einen Tisch am 1. Januar um 20:00 Uhr, vielen Dank Klaus Müller");
+		assertRequestEquals(newYearRequest2, NAME, DATE, TIME, NUMBER_OF_PEOPLE);
+		
+		ReservationRequest newYear2024Request = new DefaultReservationRequest(
+	            "Hallo, bitte für zwei Personen einen Tisch am 1.1.2024 um 20:00 Uhr, vielen Dank Klaus Müller", newYear2024);
+		assertRequestEquals(newYear2024Request, NAME, LocalDate.of(newYear2024.getYear(), 1, 1), TIME, NUMBER_OF_PEOPLE);
+		
+		ReservationRequest newYear24Request = new DefaultReservationRequest(
+	            "Hallo, bitte für zwei Personen einen Tisch am 1.1.24 um 20:00 Uhr, vielen Dank Klaus Müller", newYear2024);
+		assertRequestEquals(newYear24Request, NAME, LocalDate.of(newYear2024.getYear(), 1, 1), TIME, NUMBER_OF_PEOPLE);
+		
+		ReservationRequest newYear2024Request2 = new DefaultReservationRequest(
+	            "Hallo, bitte für zwei Personen einen Tisch am 1. Januar 2024 um 20:00 Uhr, vielen Dank Klaus Müller", newYear2024);
+		assertRequestEquals(newYear2024Request2, NAME, LocalDate.of(newYear2024.getYear(), 1, 1), TIME, NUMBER_OF_PEOPLE);
+	}
 
 	@Test
 	void testParseRelativeDates() {
