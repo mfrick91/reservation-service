@@ -57,17 +57,38 @@ abstract class AbstractReservationParserTest {
 		LocalDate nextWeek = today.plusWeeks(1).toLocalDate();
 		LocalDate nextMonth = today.plusMonths(2).toLocalDate();
 
+		LocalDateTime endOfYear = LocalDateTime.of(today.getYear(), 12, 31, 9, 0);
+		LocalDate newYear = LocalDate.of(today.getYear() + 1, 1, 1);
+
+		LocalDateTime leapYear = LocalDateTime.of(2024, 2, 28, 9, 0);
+		LocalDate leapDay = LocalDate.of(2024, 2, 29);
+
+		LocalDateTime noLeapYear = LocalDateTime.of(2023, 2, 28, 9, 0);
+		LocalDate firstOfMarch = LocalDate.of(2023, 3, 1);
+
 		ReservationRequest tomorrowRequest = new DefaultReservationRequest(
-            "Hallo, bitte für zwei Personen einen Tisch für morgen um 20:00 Uhr, vielen Dank Klaus Müller", today);
+				"Hallo, bitte für zwei Personen einen Tisch für morgen um 20:00 Uhr, vielen Dank Klaus Müller", today);
 		assertRequestEquals(tomorrowRequest, NAME, tomorrow, TIME, NUMBER_OF_PEOPLE);
-		
+
 		ReservationRequest nextWeekRequest = new DefaultReservationRequest(
-	            "Hallo, bitte für zwei Personen einen Tisch für nächste Woche um 8 Uhr abends, vielen Dank Klaus Müller", today);
+				"Hallo, bitte für zwei Personen einen Tisch für nächste Woche um 8 Uhr abends, vielen Dank Klaus Müller", today);
 		assertRequestEquals(nextWeekRequest, NAME, nextWeek, TIME, NUMBER_OF_PEOPLE);
-		
+
 		ReservationRequest nextMonthRequest = new DefaultReservationRequest(
-            "Hallo, bitte für zwei Personen einen Tisch für übernächsten Monat um 20:00 Uhr, vielen Dank Klaus Müller", today);
+				"Hallo, bitte für zwei Personen einen Tisch für übernächsten Monat um 20:00 Uhr, vielen Dank Klaus Müller", today);
 		assertRequestEquals(nextMonthRequest, NAME, nextMonth, TIME, NUMBER_OF_PEOPLE);
+
+		ReservationRequest newYearRequest = new DefaultReservationRequest(
+				"Hallo, bitte für zwei Personen einen Tisch für morgen um 20:00 Uhr, vielen Dank Klaus Müller", endOfYear);
+		assertRequestEquals(newYearRequest, NAME, newYear, TIME, NUMBER_OF_PEOPLE);
+		
+		ReservationRequest leapYearRequest = new DefaultReservationRequest(
+				"Hallo, bitte für zwei Personen einen Tisch für morgen um 20:00 Uhr, vielen Dank Klaus Müller", leapYear);
+		assertRequestEquals(leapYearRequest, NAME, leapDay, TIME, NUMBER_OF_PEOPLE);
+
+		ReservationRequest noleapYearRequest = new DefaultReservationRequest(
+				"Hallo, bitte für zwei Personen einen Tisch für morgen um 20:00 Uhr, vielen Dank Klaus Müller", noLeapYear);
+		assertRequestEquals(noleapYearRequest, NAME, firstOfMarch, TIME, NUMBER_OF_PEOPLE);
 	}
 
 	@Test
