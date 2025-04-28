@@ -70,7 +70,7 @@ public class BasicReservationParser implements ReservationParser {
 		if (matcher.find()) {
 			return text.substring(matcher.start(2), matcher.end(2));
 		}
-		return "";
+		return null;
 	}
 
     /**
@@ -105,7 +105,7 @@ public class BasicReservationParser implements ReservationParser {
 			return date;
 		}
 
-		return timestamp;
+		return null;
 	}
 
     /**
@@ -222,7 +222,7 @@ public class BasicReservationParser implements ReservationParser {
 			return time;
 		}
 
-		return LocalTime.of(0, 0, 0, 0);
+		return null;
 	}
 
 	/**
@@ -308,21 +308,21 @@ public class BasicReservationParser implements ReservationParser {
 		while (peopleMatcher.find()) {
 			numberOfPeople = Math.max(numberOfPeople, Integer.parseInt(peopleMatcher.group(1)));
 		}
-		if (numberOfPeople > 0) {
+		if (numberOfPeople >= 0) {
 			return numberOfPeople;
 		}
 
 		numberOfPeople = this.parsePeopleRange(normalizedText, peopleMarkers);
-		if (numberOfPeople > 0) {
+		if (numberOfPeople >= 0) {
 			return numberOfPeople;
 		}
 
 		numberOfPeople = this.parseQuantities(normalizedText, peopleMarkers);
-		if (numberOfPeople > 0) {
+		if (numberOfPeople >= 0) {
 			return numberOfPeople;
 		}
 
-		return numberOfPeople;
+		return -1;
     }
     
     /**
@@ -335,7 +335,7 @@ public class BasicReservationParser implements ReservationParser {
 	private int parsePeopleRange(String text, String[] markers) {
 		Matcher rangeMatcher = Pattern.compile("(zwischen|mit)\\s+(\\d+)\\s*(und|bis|-)\\s*(\\d+)\\s+(" 
 				+ String.join("|", markers) + ")").matcher(text);
-		int numberOfPeople = 0;
+		int numberOfPeople = -1;
 		while (rangeMatcher.find()) {
 			try {
 				boolean isTimePattern = text.substring(rangeMatcher.end(4)).trim().startsWith("uhr");
@@ -361,7 +361,7 @@ public class BasicReservationParser implements ReservationParser {
     private int parseQuantities(String text, String[] markers) {
     	Matcher quantitiesMatcher = Pattern.compile("(zu|sind|fuer|mindestens|bis\\s*zu|nicht\\s*mehr\\s*als)\\s+(\\d+)(\\s+" 
         		+ String.join("|", markers) + ")?").matcher(text);
-		int numberOfPeople = 0;
+		int numberOfPeople = -1;
 		while (quantitiesMatcher.find()) {
 			try {
 				boolean isTimePattern = text.substring(quantitiesMatcher.end(2)).trim().startsWith("uhr");

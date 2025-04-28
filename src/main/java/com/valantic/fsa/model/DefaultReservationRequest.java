@@ -12,12 +12,12 @@ public class DefaultReservationRequest implements ReservationRequest {
     /**
      * The text of the reservation request.
      */
-    private final String text;
+    private String text;
     
     /**
      * The timestamp of the reservation request.
      */
-    private final LocalDateTime timestamp;
+    private LocalDateTime timestamp;
     
     /**
      * Constructs a new {@code DefaultReservationRequest} with the specified text.

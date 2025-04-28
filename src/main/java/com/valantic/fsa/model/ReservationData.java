@@ -33,5 +33,5 @@ public interface ReservationData {
 	 * @return the number of people, or -1 if not specified
 	 */
 	public int getNumberOfPeople();
-
+	
 }

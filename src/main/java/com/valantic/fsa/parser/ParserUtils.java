@@ -255,8 +255,9 @@ public class ParserUtils {
 
 	/**
 	 * Normalizes a text string by converting it to lowercase, removing special
-	 * characters, and replacing month names with their numeric representations.
-	 * 
+	 * characters and nested strings, and replacing month and number words with their numeric
+	 * representations.
+	 *
 	 * @param text the text to normalize
 	 * @return the normalized text
 	 */
@@ -267,11 +268,14 @@ public class ParserUtils {
 
 		// convert to lower case
 		String normalizedText = text.trim().toLowerCase(Locale.GERMAN);
-
+		
 		// remove special characters
 		normalizedText = normalizedText
 				.replace("ä", "ae").replace("ü", "ue")
-    			.replace("ö", "oe").replace("ß", "ss"); 
+    			.replace("ö", "oe").replace("ß", "ss");
+
+		// remove nested strings
+		normalizedText = stripQuotes(normalizedText);
 		
 		// replace month names with numbers
 		for (Map.Entry<String, String> entry : MONTH_MAP.entrySet()) {
@@ -314,19 +318,20 @@ public class ParserUtils {
 	 * @return the text with quotes removed
 	 */
 	public static String stripQuotes(String text) {
-		while (!text.isEmpty() 
-				&& ((text.charAt(0) == '"') 
-						|| (text.charAt(0) == '\"') 
-						|| (text.charAt(0) == '\''))) {
-			text = text.substring(1);
-		}
-		while (!text.isEmpty() 
-				&& ((text.charAt(text.length() - 1) == '"') 
-				|| (text.charAt(text.length() - 1) == '\"')
-				|| (text.charAt(text.length() - 1) == '\''))) {
-			text = text.substring(0, text.length() - 1);
-		}
-		return text;
+//		while (!text.isEmpty() 
+//				&& ((text.charAt(0) == '"') 
+//						|| (text.charAt(0) == '\"') 
+//						|| (text.charAt(0) == '\''))) {
+//			text = text.substring(1);
+//		}
+//		while (!text.isEmpty() 
+//				&& ((text.charAt(text.length() - 1) == '"') 
+//				|| (text.charAt(text.length() - 1) == '\"')
+//				|| (text.charAt(text.length() - 1) == '\''))) {
+//			text = text.substring(0, text.length() - 1);
+//		}
+//		return text;
+		return text.replace("'", "").replace("\'", "").replace("\"", "").trim();
 	}
 
 	/**

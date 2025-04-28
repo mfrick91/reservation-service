@@ -36,7 +36,7 @@ public class DefaultReservationData implements ReservationData {
 	 * @param name the name of the person making the reservation
 	 */
 	public DefaultReservationData() {
-		this("");
+		this(null);
 	}
 
 	/**
@@ -46,7 +46,7 @@ public class DefaultReservationData implements ReservationData {
 	 * @param date the date of the reservation
 	 */
 	public DefaultReservationData(String name) {
-		this(name, LocalDate.of(0, 0, 0));
+		this(name, null);
 	}
 
 	/**
@@ -56,7 +56,7 @@ public class DefaultReservationData implements ReservationData {
 	 * @param date the date of the reservation
 	 */
 	public DefaultReservationData(String name, LocalDate date) {
-		this(name, date, LocalTime.of(0, 0, 0, 0));
+		this(name, date, null);
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class DefaultReservationData implements ReservationData {
 	 * @param time the time of the reservation
 	 */
 	public DefaultReservationData(String name, LocalDate date, LocalTime time) {
-		this(name, date, time, 0);
+		this(name, date, time, -1);
 	}
 
 	/**
