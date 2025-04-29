@@ -1,4 +1,4 @@
-package com.valantic.fsa.parser;
+package com.valantic.fsa.util;
 
 import java.util.ArrayList;
 import java.util.Collection;

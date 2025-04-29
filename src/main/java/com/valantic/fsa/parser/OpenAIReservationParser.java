@@ -2,15 +2,13 @@ package com.valantic.fsa.parser;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.util.Locale;
 
 import com.valantic.fsa.llm.OpenAIClient;
 import com.valantic.fsa.model.DefaultReservationData;
 import com.valantic.fsa.model.ReservationData;
 import com.valantic.fsa.model.ReservationRequest;
+import com.valantic.fsa.util.Formatters;
+import com.valantic.fsa.util.ParserUtils;
 
 /**
  * A parser that uses the OpenAI API to parse reservation requests.
@@ -40,23 +38,6 @@ public class OpenAIReservationParser implements ReservationParser {
 //            "\"Guten Tag, wir sind 9 und brauchen einen Tisch für den übernächsten Montag um 22 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 05.05.2025, 22:00, 9)\n" +
 //            "\"Guten Tag, einen Tisch für vier Personen für den übernächsten Monat um 18 Uhr, Gruß Franz Schulze\"-> (Franz Schulze, 24.06.2025, 18:00, 4)\n" +
             "Text:\n \"%s\"";
-
-	/**
-     * The date formatter.
-     */
-	private static final DateTimeFormatter DATE_FORMAT = new DateTimeFormatterBuilder()
-			.appendPattern("d[.]M[.]uuuu")
-			.parseDefaulting(ChronoField.YEAR, LocalDate.now().getYear())
-			.toFormatter()
-			.withLocale(Locale.GERMAN);
-
-    /**
-     * The time formatter.
-     */
-    private static final DateTimeFormatter TIME_FORMAT = new DateTimeFormatterBuilder()
-    		.appendPattern("H[:]mm")
-    		.parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-    		.toFormatter();
 
 	/**
 	 * The OpenAI client.
@@ -135,7 +116,7 @@ public class OpenAIReservationParser implements ReservationParser {
 		}
 		datePart = ParserUtils.stripQuotes(datePart.trim());
 		if (!datePart.isEmpty()) {
-			return LocalDate.parse(datePart, DATE_FORMAT);
+			return LocalDate.parse(datePart, Formatters.DATE);
 		}
 		return null;
 	}
@@ -152,7 +133,7 @@ public class OpenAIReservationParser implements ReservationParser {
 		}
 		timePart = ParserUtils.stripQuotes(timePart.trim());
 		if (!timePart.isEmpty()) {
-			return LocalTime.parse(timePart.trim(), TIME_FORMAT);
+			return LocalTime.parse(timePart.trim(), Formatters.TIME);
 		}
 		return null;
 	}

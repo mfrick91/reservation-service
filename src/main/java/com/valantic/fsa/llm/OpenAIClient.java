@@ -106,7 +106,6 @@ public class OpenAIClient {
                 "messages", new Object[] {
                     Map.of("role", "user", "content", userPrompt)
                 }
-//                ", temperature", 0.2
             );
 
             String json = mapper.writeValueAsString(body);
